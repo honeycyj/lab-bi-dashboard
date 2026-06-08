@@ -280,10 +280,10 @@ h1 {
 .board-body {
   min-height: 0;
   display: grid;
-  grid-auto-rows: minmax(0, 11vh);
+  grid-auto-rows: minmax(0, 10.8vh);
   align-content: start;
-  gap: 4px;
-  padding-top: 4px;
+  gap: 6px;
+  padding-top: 6px;
   animation: page-enter .45s ease both;
 }
 
@@ -294,18 +294,21 @@ h1 {
 
 .project-row {
   min-height: 0;
-  border: 0;
-  background: #f0f0f1;
+  border: 1px solid #e6e7eb;
+  border-radius: 6px;
+  background: #f7f8fa;
+  box-shadow: 0 6px 16px rgba(15, 23, 42, .035);
+  overflow: hidden;
 }
 
-.project-row:nth-child(even) { background: #ededee; }
+.project-row:nth-child(even) { background: #f2f3f5; }
 .cell {
   min-width: 0;
   min-height: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: .45vh .5vw;
+  padding: .45vh .55vw;
   border-right: 0;
   border-bottom: 0;
   background: transparent;
@@ -314,12 +317,12 @@ h1 {
 
 .status-cell,
 .summary-cell {
-  border-left: 1px solid #d7d7da;
+  border-left: 1px solid rgba(208, 211, 217, .72);
 }
 
 .index-cell {
   font-family: "Inter", "Arial", sans-serif;
-  color: #202124;
+  color: #5f6368;
   font-size: 14px;
   font-weight: 350;
 }
@@ -334,7 +337,7 @@ h1 {
 
 .project-name b { font-size: .72vw; font-weight: 600; }
 .project-name span { color: #73757b; font-size: .55vw; }
-.compact { color: #55575c; text-align: center; line-height: 1.45; }
+.compact { color: #62656b; text-align: center; line-height: 1.45; }
 
 .timeline-cell {
   padding: .35vh 1.1vw;

@@ -212,7 +212,7 @@ h1 {
 .board-header,
 .project-row {
   display: grid;
-  grid-template-columns: 3.1vw 7.1vw 4.2vw 5.1vw minmax(0, 1fr) 6.8vw 17vw;
+  grid-template-columns: 3.1vw 13.8vw minmax(0, 1fr) 6.8vw 17vw;
 }
 
 .board-header {
@@ -327,20 +327,64 @@ h1 {
   font-weight: 350;
 }
 
-.project-name {
+.project-info {
   flex-direction: column;
-  gap: .35vh;
-  padding: 0 .55vw;
-  text-align: center;
-  line-height: 1.35;
+  align-items: flex-start;
+  gap: .58vh;
+  padding: .9vh .95vw;
+  text-align: left;
+  line-height: 1.25;
 }
 
-.project-name b { font-size: .72vw; font-weight: 600; }
-.project-name span { color: #73757b; font-size: .55vw; }
+.project-title {
+  display: flex;
+  flex-direction: column;
+  gap: .18vh;
+  min-width: 0;
+  width: 100%;
+}
+
+.project-title b {
+  overflow: hidden;
+  color: #202124;
+  font-size: .72vw;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.project-title span {
+  overflow: hidden;
+  color: #73757b;
+  font-size: .52vw;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.project-meta-line {
+  display: inline-flex;
+  align-items: center;
+  max-width: 100%;
+  padding: .22vh .42vw;
+  border: 1px solid rgba(208, 211, 217, .72);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, .58);
+  color: #62656b;
+  font-size: .52vw;
+  white-space: nowrap;
+}
+
+.project-meta-line i {
+  width: 1px;
+  height: .58vw;
+  margin: 0 .42vw;
+  background: rgba(160, 164, 172, .75);
+}
+
 .compact { color: #62656b; text-align: center; line-height: 1.45; }
 
 .timeline-cell {
-  padding: .35vh 1.1vw;
+  padding: .35vh 1.35vw;
   overflow: hidden;
 }
 

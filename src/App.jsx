@@ -289,9 +289,7 @@ function Dashboard() {
       <section className="project-board">
         <div className="board-header">
           <div>序号</div>
-          <div>项目名称</div>
-          <div>负责人</div>
-          <div>责任部门</div>
+          <div>项目信息</div>
           <div className="timeline-title">
             <span>项目里程碑 & 关键节点（时间轴）</span>
             <small>
@@ -315,9 +313,17 @@ function Dashboard() {
           {visibleProjects.map((project, slotIndex) => (
             <div className="project-row" key={project.id}>
               <div className="cell index-cell">{currentPage * PAGE_SIZE + slotIndex + 1}</div>
-              <div className="cell project-name"><b>{project.name}</b><span>{project.sub}</span></div>
-              <div className="cell compact">{project.owner}</div>
-              <div className="cell compact">{project.dept}</div>
+              <div className="cell project-info">
+                <div className="project-title">
+                  <b>{project.name}</b>
+                  {project.sub && <span>{project.sub}</span>}
+                </div>
+                <div className="project-meta-line">
+                  <span>{project.owner}</span>
+                  <i />
+                  <span>{project.dept}</span>
+                </div>
+              </div>
               <div className="cell timeline-cell"><MilestoneChart project={project} /></div>
               <div className="cell status-cell">
                 {project.statuses.map((status, i) => <i className={`status-light ${status}`} key={i} />)}

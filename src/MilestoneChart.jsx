@@ -155,7 +155,15 @@ export default function MilestoneChart({ project }) {
           >
             <span className="chart-node-label" title={label}>{label}</span>
             {isCurrent && <i className="chart-current-marker" />}
-            <i className="chart-node-circle"><NodeIcon state={displayState} /></i>
+            <i className="chart-node-circle">
+              {isCurrent && (
+                <>
+                  <span className="chart-node-pulse" aria-hidden="true" />
+                  <span className="chart-node-pulse" aria-hidden="true" />
+                </>
+              )}
+              <NodeIcon state={displayState} />
+            </i>
             <span className="chart-node-date">{date}</span>
           </div>
         )

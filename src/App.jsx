@@ -340,13 +340,15 @@ function OverviewStatCard({ item }) {
 function TrendChart() {
   const max = 50
   const ticks = [50, 40, 30, 20, 10, 0]
+  const visibleTrendData = trendData.slice(-8)
+  const rangeLabel = `${visibleTrendData[0]?.[0] ?? ''} - ${visibleTrendData[visibleTrendData.length - 1]?.[0] ?? ''}`
   const barHeight = (value) => `${Math.max(2, (value / max) * 100)}%`
 
   return (
     <article className="overview-card trend-card">
       <div className="overview-card-head">
         <span>项目数趋势</span>
-        <small>25年2月 - 26年1月</small>
+        <small>最近8个月 · {rangeLabel}</small>
       </div>
       <div className="trend-chart">
         <div className="trend-y-axis">
@@ -356,7 +358,7 @@ function TrendChart() {
           <div className="trend-grid">
             {ticks.map((tick) => <i key={tick} />)}
           </div>
-          {trendData.map(([month, total, running, closed]) => (
+          {visibleTrendData.map(([month, total, running, closed]) => (
             <div className="trend-group" key={month}>
               <div className="trend-bars">
                 <i className="total" style={{ height: barHeight(total) }}><b>{total}</b></i>
@@ -451,7 +453,7 @@ function RingGridCard() {
           <div className="ring-item" key={name}>
             <div
               className="mini-ring"
-              style={{ background: `conic-gradient(${index < 3 ? '#7c2cf4' : '#b479f0'} 0 ${value}%, #e1e3e8 ${value}% 100%)` }}
+              style={{ '--ring-value': `${value}%`, '--ring-index': index }}
             >
               <b>{value}%</b>
             </div>
@@ -653,6 +655,29 @@ function Dashboard() {
   }, { scope: dashboardRef, dependencies: [currentPage] })
 
   useGSAP(() => {
+    if (screenPage !== 0 || prefersReducedMotion()) return
+
+    const pulses = gsap.utils.toArray('.chart-node.current .chart-node-pulse')
+    if (!pulses.length) return
+
+    gsap.fromTo(
+      pulses,
+      { autoAlpha: 0.34, scale: 0.92, transformOrigin: '50% 50%' },
+      {
+        autoAlpha: 0,
+        scale: 2.35,
+        duration: 1.8,
+        ease: 'power2.out',
+        repeat: -1,
+        stagger: {
+          each: 0.55,
+          from: 'start',
+        },
+      },
+    )
+  }, { scope: dashboardRef, dependencies: [screenPage, currentPage] })
+
+  useGSAP(() => {
     if (screenPage !== 1 || prefersReducedMotion()) return
 
     const tl = gsap.timeline({
@@ -794,19 +819,21 @@ function Dashboard() {
             >
               {visibleProjects.map((project, slotIndex) => (
                 <div className="project-row" key={project.id}>
-                  <div className="cell index-cell">{currentPage * PAGE_SIZE + slotIndex + 1}</div>
                   <div className="cell project-info">
-                    <div className="project-title">
-                      <b>{project.name}</b>
-                      {project.sub && <span>{project.sub}</span>}
+                    <span className="project-index">{currentPage * PAGE_SIZE + slotIndex + 1}</span>
+                    <div className="project-copy">
+                      <div className="project-title">
+                        <b>{project.name}</b>
+                        {project.sub && <span>{project.sub}</span>}
+                      </div>
+                      <div className="project-meta-line">
+                        <span>{project.owner}</span>
+                        <i />
+                        <span>{project.dept}</span>
+                      </div>
                     </div>
-                    <div className="project-meta-line">
-                      <span>{project.owner}</span>
-                      <i />
-                      <span>{project.dept}</span>
-                    </div>
+                    <TqcStatus statuses={project.statuses} />
                   </div>
-                  <div className="cell tqc-status-cell"><TqcStatus statuses={project.statuses} /></div>
                   <div className="cell timeline-cell"><MilestoneChart project={project} /></div>
                   <div className="cell summary-cell"><TqcSummary project={project} /></div>
                 </div>

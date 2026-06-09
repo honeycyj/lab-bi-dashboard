@@ -11,6 +11,7 @@ import MilestoneChart from './MilestoneChart'
 
 const PAGE_SIZE = 7
 const PAGE_INTERVAL = 12000
+const SCREEN_INTERVAL = 36000
 
 const projects = [
   {
@@ -175,6 +176,67 @@ const dashboardProjects = [
   },
 ]
 
+const overviewStats = [
+  { label: '在研项目', value: 45, unit: '个', tone: 'purple' },
+  { label: '运行项目', value: 29, unit: '个', tone: 'green' },
+  { label: '本月关闭', value: 16, unit: '个', tone: 'amber' },
+  { label: 'TQC风险项', value: 11, unit: '项', tone: 'red' },
+]
+
+const trendData = [
+  ['2月', 10, 10, 0],
+  ['3月', 11, 11, 0],
+  ['4月', 12, 12, 0],
+  ['5月', 14, 14, 0],
+  ['6月', 17, 17, 0],
+  ['7月', 17, 17, 0],
+  ['8月', 23, 20, 3],
+  ['9月', 28, 25, 3],
+  ['10月', 29, 26, 3],
+  ['11月', 31, 26, 5],
+  ['12月', 34, 28, 6],
+  ['1月', 40, 30, 10],
+  ['1月加场', 45, 29, 16],
+]
+
+const tqcDepartmentData = [
+  ['产品创新部', 12],
+  ['技术研究部', 18],
+  ['媒体应用使能部', 9],
+  ['生态发展部', 6],
+]
+
+const defectProcessData = [
+  ['研发', 37],
+  ['测试', 63],
+]
+
+const defectLevelData = [
+  ['提示级', 30],
+  ['一般级', 19],
+  ['严重级', 19],
+  ['致命级', 32],
+]
+
+const defectStateData = [
+  ['已关闭', 18],
+  ['已解决', 23],
+  ['已通过', 14],
+  ['未通过', 8],
+  ['修复中', 21],
+  ['打开', 10],
+  ['挂起', 6],
+]
+
+const dataTypeData = [
+  ['数据类型一', 40],
+  ['数据类型二', 30],
+  ['数据类型三', 15],
+  ['数据类型四', 8],
+  ['数据类型五', 4],
+  ['数据类型六', 3],
+]
+
 function MetricCard({ item }) {
   const Icon = item.icon
   return (
@@ -192,6 +254,38 @@ function MetricCard({ item }) {
         {item.extra && <b>↑ {item.extra}</b>}
       </div>
     </div>
+  )
+}
+
+function Header({ now, title }) {
+  const dateText = new Intl.DateTimeFormat('zh-CN', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    weekday: 'short',
+  }).format(now)
+  const timeText = new Intl.DateTimeFormat('zh-CN', {
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false,
+  }).format(now)
+
+  return (
+    <header className="topbar">
+      <div className="brand">
+        <img src="/logotext.png" alt="马栏山音视频实验室" />
+      </div>
+      <div className="header-title">
+        <h1>{title}</h1>
+      </div>
+      <div className="header-meta">
+        <div className="live-time">
+          <span>{dateText}</span>
+          <b>{timeText}</b>
+        </div>
+      </div>
+    </header>
   )
 }
 
@@ -216,6 +310,152 @@ function Summary({ items }) {
         ))}
       </div>
     </div>
+  )
+}
+
+function OverviewStatCard({ item }) {
+  return (
+    <div className={`overview-stat overview-stat-${item.tone}`}>
+      <span>{item.label}</span>
+      <strong>{item.value}</strong>
+      <em>{item.unit}</em>
+    </div>
+  )
+}
+
+function TrendChart() {
+  const max = Math.max(...trendData.flatMap((item) => item.slice(1)))
+  const barHeight = (value) => `${Math.max(2, (value / max) * 100)}%`
+
+  return (
+    <article className="overview-card trend-card">
+      <div className="overview-card-head">
+        <span>项目数趋势</span>
+        <small>25年2月 - 26年1月</small>
+      </div>
+      <div className="trend-chart">
+        <div className="trend-grid" />
+        {trendData.map(([month, total, running, closed]) => (
+          <div className="trend-group" key={month}>
+            <div className="trend-bars">
+              <i className="total" style={{ height: barHeight(total) }}><b>{total}</b></i>
+              <i className="running" style={{ height: barHeight(running) }}><b>{running}</b></i>
+              <i className="closed" style={{ height: barHeight(closed) }}><b>{closed}</b></i>
+            </div>
+            <span>{month}</span>
+          </div>
+        ))}
+      </div>
+      <div className="chart-legend">
+        <span><i className="total" />项目总数</span>
+        <span><i className="running" />运行数</span>
+        <span><i className="closed" />关闭数</span>
+      </div>
+    </article>
+  )
+}
+
+function DonutCard({ title, data, variant = 'default' }) {
+  const total = data.reduce((sum, item) => sum + item[1], 0)
+  let cursor = 0
+  const colors = variant === 'status'
+    ? ['#b479f0', '#7c2cf4', '#ffbd2e', '#ff6678', '#a77bf3', '#28c840', '#0e0e1e']
+    : ['#7c2cf4', '#b479f0', '#a77bf3', '#ffbd2e', '#28c840', '#ff6678']
+  const gradient = data.map((item, index) => {
+    const start = cursor
+    cursor += (item[1] / total) * 100
+    return `${colors[index % colors.length]} ${start}% ${cursor}%`
+  }).join(', ')
+
+  return (
+    <article className="overview-card donut-card">
+      <div className="overview-card-head">
+        <span>{title}</span>
+        <small>分布占比</small>
+      </div>
+      <div className="donut-layout">
+        <div className="donut" style={{ background: `conic-gradient(${gradient})` }}>
+          <span>{total}</span>
+          <small>总量</small>
+        </div>
+        <div className="donut-list">
+          {data.map((item, index) => (
+            <span key={item[0]}>
+              <i style={{ background: colors[index % colors.length] }} />
+              <b>{item[0]}</b>
+              <em>{Math.round((item[1] / total) * 100)}%</em>
+            </span>
+          ))}
+        </div>
+      </div>
+    </article>
+  )
+}
+
+function DepartmentCard() {
+  const max = Math.max(...tqcDepartmentData.map((item) => item[1]))
+  return (
+    <article className="overview-card department-card">
+      <div className="overview-card-head">
+        <span>TQC 项目数</span>
+        <small>按责任部门</small>
+      </div>
+      <div className="dept-list">
+        {tqcDepartmentData.map(([name, value]) => (
+          <div className="dept-row" key={name}>
+            <span>{name}</span>
+            <div><i style={{ width: `${(value / max) * 100}%` }} /></div>
+            <b>{value}</b>
+          </div>
+        ))}
+      </div>
+    </article>
+  )
+}
+
+function RingGridCard() {
+  return (
+    <article className="overview-card ring-grid-card">
+      <div className="overview-card-head">
+        <span>数据类型分布</span>
+        <small>类型占比</small>
+      </div>
+      <div className="ring-grid">
+        {dataTypeData.map(([name, value], index) => (
+          <div className="ring-item" key={name}>
+            <div
+              className="mini-ring"
+              style={{ background: `conic-gradient(${index < 3 ? '#7c2cf4' : '#b479f0'} 0 ${value}%, #e1e3e8 ${value}% 100%)` }}
+            >
+              <b>{value}%</b>
+            </div>
+            <span>{name}</span>
+          </div>
+        ))}
+      </div>
+    </article>
+  )
+}
+
+function OverviewPage() {
+  return (
+    <section className="overview-page">
+      <div className="overview-stats">
+        {overviewStats.map((item) => <OverviewStatCard item={item} key={item.label} />)}
+      </div>
+
+      <div className="overview-main">
+        <DonutCard title="TQC 项目结构" data={defectLevelData} />
+        <TrendChart />
+      </div>
+
+      <div className="overview-grid">
+        <DepartmentCard />
+        <DonutCard title="缺陷处理分布" data={defectProcessData} />
+        <DonutCard title="缺陷状态分布" data={defectStateData} variant="status" />
+        <RingGridCard />
+      </div>
+    </section>
   )
 }
 
@@ -244,6 +484,8 @@ function TqcSummary({ project }) {
 function Dashboard() {
   const [now, setNow] = useState(new Date())
   const [currentPage, setCurrentPage] = useState(0)
+  const [screenPage, setScreenPage] = useState(0)
+  const screenCount = 2
   const totalPages = Math.max(1, Math.ceil(dashboardProjects.length / PAGE_SIZE))
   const metrics = useMemo(() => {
     const total = dashboardProjects.length
@@ -274,96 +516,89 @@ function Dashboard() {
   }, [])
 
   useEffect(() => {
-    if (totalPages <= 1) return undefined
+    const screenTimer = window.setInterval(
+      () => setScreenPage((page) => (page + 1) % screenCount),
+      SCREEN_INTERVAL,
+    )
+    return () => window.clearInterval(screenTimer)
+  }, [screenCount])
+
+  useEffect(() => {
+    if (totalPages <= 1 || screenPage !== 0) return undefined
     const pageTimer = window.setInterval(
       () => setCurrentPage((page) => (page + 1) % totalPages),
       PAGE_INTERVAL,
     )
     return () => window.clearInterval(pageTimer)
-  }, [totalPages])
-
-  const dateText = new Intl.DateTimeFormat('zh-CN', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    weekday: 'short',
-  }).format(now)
-  const timeText = new Intl.DateTimeFormat('zh-CN', {
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
-    hour12: false,
-  }).format(now)
+  }, [screenPage, totalPages])
 
   return (
-    <main className="dashboard">
-      <header className="topbar">
-        <div className="brand">
-          <img src="/logotext.png" alt="马栏山音视频实验室" />
-        </div>
-        <div className="header-title">
-          <h1>项目组合里程碑进度与 TQC 看板</h1>
-        </div>
-        <div className="header-meta">
-          <div className="live-time">
-            <span>{dateText}</span>
-            <b>{timeText}</b>
-          </div>
-        </div>
-      </header>
+    <main className={`dashboard ${screenPage === 1 ? 'dashboard-overview' : ''}`}>
+      <Header
+        now={now}
+        title={screenPage === 0 ? '项目组合里程碑进度与 TQC 看板' : '项目信息概览'}
+      />
 
-      <section className="metrics">
-        {metrics.map((item) => <MetricCard item={item} key={item.label} />)}
-      </section>
+      {screenPage === 0 ? (
+        <>
+          <section className="metrics">
+            {metrics.map((item) => <MetricCard item={item} key={item.label} />)}
+          </section>
 
-      <section className="project-board">
-        <div className="board-title">
-          <span>TQC 看板</span>
-        </div>
-
-        <div
-          className="board-body"
-          style={{ '--rows-per-page': PAGE_SIZE }}
-          key={currentPage}
-        >
-          {visibleProjects.map((project, slotIndex) => (
-            <div className="project-row" key={project.id}>
-              <div className="cell index-cell">{currentPage * PAGE_SIZE + slotIndex + 1}</div>
-              <div className="cell project-info">
-                <div className="project-title">
-                  <b>{project.name}</b>
-                  {project.sub && <span>{project.sub}</span>}
-                </div>
-                <div className="project-meta-line">
-                  <span>{project.owner}</span>
-                  <i />
-                  <span>{project.dept}</span>
-                </div>
-              </div>
-              <div className="cell tqc-status-cell"><TqcStatus statuses={project.statuses} /></div>
-              <div className="cell timeline-cell"><MilestoneChart project={project} /></div>
-              <div className="cell summary-cell"><TqcSummary project={project} /></div>
+          <section className="project-board">
+            <div className="board-title">
+              <span>TQC 看板</span>
             </div>
+
+            <div
+              className="board-body"
+              style={{ '--rows-per-page': PAGE_SIZE }}
+              key={currentPage}
+            >
+              {visibleProjects.map((project, slotIndex) => (
+                <div className="project-row" key={project.id}>
+                  <div className="cell index-cell">{currentPage * PAGE_SIZE + slotIndex + 1}</div>
+                  <div className="cell project-info">
+                    <div className="project-title">
+                      <b>{project.name}</b>
+                      {project.sub && <span>{project.sub}</span>}
+                    </div>
+                    <div className="project-meta-line">
+                      <span>{project.owner}</span>
+                      <i />
+                      <span>{project.dept}</span>
+                    </div>
+                  </div>
+                  <div className="cell tqc-status-cell"><TqcStatus statuses={project.statuses} /></div>
+                  <div className="cell timeline-cell"><MilestoneChart project={project} /></div>
+                  <div className="cell summary-cell"><TqcSummary project={project} /></div>
+                </div>
+              ))}
+            </div>
+          </section>
+        </>
+      ) : (
+        <OverviewPage />
+      )}
+
+      <nav className="pagination" aria-label="看板分页">
+        <span className="page-count">
+          第 {screenPage === 0 ? currentPage + 1 : screenPage + 1} / {screenPage === 0 ? totalPages : screenCount} 页
+        </span>
+        <div className="page-dots">
+          {Array.from({ length: screenCount }, (_, index) => (
+            <button
+              type="button"
+              className={index === screenPage ? 'active' : ''}
+              aria-label={`切换到看板第 ${index + 1} 页`}
+              aria-current={index === screenPage ? 'page' : undefined}
+              onClick={() => setScreenPage(index)}
+              key={index}
+            />
           ))}
         </div>
-
-        <nav className="pagination" aria-label="项目分页">
-          <span className="page-count">第 {currentPage + 1} / {totalPages} 页</span>
-          <div className="page-dots">
-            {Array.from({ length: totalPages }, (_, index) => (
-              <button
-                type="button"
-                className={index === currentPage ? 'active' : ''}
-                aria-label={`切换到第 ${index + 1} 页`}
-                aria-current={index === currentPage ? 'page' : undefined}
-                onClick={() => setCurrentPage(index)}
-                key={index}
-              />
-            ))}
-          </div>
-          <span className="page-timer">{PAGE_INTERVAL / 1000} 秒自动翻页</span>
-        </nav>
-      </section>
+        <span className="page-timer">{screenPage === 0 ? `${PAGE_INTERVAL / 1000} 秒项目翻页` : `${SCREEN_INTERVAL / 1000} 秒看板翻页`}</span>
+      </nav>
     </main>
   )
 }

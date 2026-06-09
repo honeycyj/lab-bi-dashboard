@@ -9,7 +9,7 @@ import {
 } from 'lucide-react'
 import MilestoneChart from './MilestoneChart'
 
-const PAGE_SIZE = 6
+const PAGE_SIZE = 7
 const PAGE_INTERVAL = 12000
 
 const projects = [
@@ -196,17 +196,47 @@ function MetricCard({ item }) {
 }
 
 function Summary({ items }) {
+  const primary = items[0]
+  const secondary = items.slice(1)
+
   return (
     <div className="summary">
-      {items.map((line, index) => {
-        if (line.length === 1) return <p key={index}>{line[0]}</p>
-        return (
-          <p key={index}>
-            <b className={line[2]}>{line[0]}：</b>
-            <span className={index === 0 ? `summary-pill ${line[2]}` : ''}>{line[1]}</span>
-          </p>
-        )
-      })}
+      {primary && (
+        <div className="summary-main">
+          <b className={primary[2]}>{primary[0]}</b>
+          <span>{primary[1]}</span>
+        </div>
+      )}
+      <div className="summary-secondary">
+        {secondary.map((line) => (
+          <span key={line[0]}>
+            <b className={line[2]}>{line[0]}</b>
+            {line[1]}
+          </span>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function TqcStatus({ statuses }) {
+  const labels = ['T', 'Q', 'C']
+  return (
+    <div className="tqc-inline" aria-label="TQC 状态">
+      {statuses.map((status, index) => (
+        <span className="tqc-chip" key={labels[index]}>
+          <b>{labels[index]}</b>
+          <i className={`status-light ${status}`} />
+        </span>
+      ))}
+    </div>
+  )
+}
+
+function TqcSummary({ project }) {
+  return (
+    <div className="tqc-summary">
+      <Summary items={project.summary} />
     </div>
   )
 }
@@ -287,27 +317,13 @@ function Dashboard() {
       </section>
 
       <section className="project-board">
-        <div className="board-header">
-          <div>序号</div>
-          <div>项目信息</div>
-          <div className="timeline-title">
-            <span>项目里程碑 & 关键节点（时间轴）</span>
-            <small>
-              <i className="line-sample gray" />计划线
-              <i className="line-sample blue" />已完成进度
-              <i className="line-sample green" />进行中节点
-              <i className="line-sample red" />延期区间
-            </small>
-          </div>
-          <div className="tqc-header">
-            <span>当前状态</span>
-            <small><b>T</b><b>Q</b><b>C</b></small>
-          </div>
-          <div>项目 TQC 整体评价</div>
+        <div className="board-title">
+          <span>TQC 看板</span>
         </div>
 
         <div
           className="board-body"
+          style={{ '--rows-per-page': PAGE_SIZE }}
           key={currentPage}
         >
           {visibleProjects.map((project, slotIndex) => (
@@ -324,11 +340,9 @@ function Dashboard() {
                   <span>{project.dept}</span>
                 </div>
               </div>
+              <div className="cell tqc-status-cell"><TqcStatus statuses={project.statuses} /></div>
               <div className="cell timeline-cell"><MilestoneChart project={project} /></div>
-              <div className="cell status-cell">
-                {project.statuses.map((status, i) => <i className={`status-light ${status}`} key={i} />)}
-              </div>
-              <div className="cell summary-cell"><Summary items={project.summary} /></div>
+              <div className="cell summary-cell"><TqcSummary project={project} /></div>
             </div>
           ))}
         </div>

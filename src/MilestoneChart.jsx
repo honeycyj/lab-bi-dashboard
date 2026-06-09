@@ -10,7 +10,7 @@ const colors = {
 
 const positionFor = (index, count) => {
   if (count <= 1) return 50
-  return 5 + (index / (count - 1)) * 90
+  return 3.5 + (index / (count - 1)) * 93
 }
 
 const DEFAULT_MARKER_DATE = new Date(2025, 8, 17)
@@ -119,14 +119,14 @@ export default function MilestoneChart({ project }) {
       <div
         className="chart-progress-line"
         style={{
-          width: `${currentPosition - 5}%`,
+          width: `${currentPosition - 3.5}%`,
           background: 'linear-gradient(90deg, rgba(183,154,245,.5), #b79af5)',
         }}
       />
       {(project.health === 'danger' || project.health === 'risk') && (
         <div
           className="chart-risk-line"
-          style={{ left: `${currentPosition}%`, right: '5%' }}
+          style={{ left: `${currentPosition}%`, right: '3.5%' }}
         />
       )}
 
@@ -165,7 +165,7 @@ export default function MilestoneChart({ project }) {
         className={`chart-current-tag ${tagPlacement} ${project.health === 'danger' ? 'danger' : project.health === 'risk' ? 'risk' : ''}`}
         style={{ left: `${currentPosition}%` }}
       >
-        CURRENT / {project.current}
+        {project.current}
       </div>
     </div>
   )

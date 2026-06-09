@@ -1,17 +1,31 @@
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
+import gsap from 'gsap'
+import { useGSAP } from '@gsap/react'
 import {
   AlertTriangle,
   CalendarDays,
   Check,
   CircleDollarSign,
   FolderKanban,
+  Settings,
   ShieldAlert,
+  X,
 } from 'lucide-react'
 import MilestoneChart from './MilestoneChart'
+
+gsap.registerPlugin(useGSAP)
 
 const PAGE_SIZE = 7
 const PAGE_INTERVAL = 12000
 const SCREEN_INTERVAL = 36000
+const TIMER_TICK = 250
+
+const prefersReducedMotion = () => (
+  typeof window !== 'undefined'
+  && window.matchMedia('(prefers-reduced-motion: reduce)').matches
+)
+
+const secondsUntil = (deadline) => Math.max(0, Math.ceil((deadline - Date.now()) / 1000))
 
 const projects = [
   {
@@ -324,7 +338,8 @@ function OverviewStatCard({ item }) {
 }
 
 function TrendChart() {
-  const max = Math.max(...trendData.flatMap((item) => item.slice(1)))
+  const max = 50
+  const ticks = [50, 40, 30, 20, 10, 0]
   const barHeight = (value) => `${Math.max(2, (value / max) * 100)}%`
 
   return (
@@ -334,17 +349,24 @@ function TrendChart() {
         <small>25年2月 - 26年1月</small>
       </div>
       <div className="trend-chart">
-        <div className="trend-grid" />
-        {trendData.map(([month, total, running, closed]) => (
-          <div className="trend-group" key={month}>
-            <div className="trend-bars">
-              <i className="total" style={{ height: barHeight(total) }}><b>{total}</b></i>
-              <i className="running" style={{ height: barHeight(running) }}><b>{running}</b></i>
-              <i className="closed" style={{ height: barHeight(closed) }}><b>{closed}</b></i>
-            </div>
-            <span>{month}</span>
+        <div className="trend-y-axis">
+          {ticks.map((tick) => <span key={tick}>{tick}</span>)}
+        </div>
+        <div className="trend-plot">
+          <div className="trend-grid">
+            {ticks.map((tick) => <i key={tick} />)}
           </div>
-        ))}
+          {trendData.map(([month, total, running, closed]) => (
+            <div className="trend-group" key={month}>
+              <div className="trend-bars">
+                <i className="total" style={{ height: barHeight(total) }}><b>{total}</b></i>
+                <i className="running" style={{ height: barHeight(running) }}><b>{running}</b></i>
+                <i className="closed" style={{ height: barHeight(closed) }}><b>{closed}</b></i>
+              </div>
+              <span>{month}</span>
+            </div>
+          ))}
+        </div>
       </div>
       <div className="chart-legend">
         <span><i className="total" />项目总数</span>
@@ -368,7 +390,7 @@ function DonutCard({ title, data, variant = 'default' }) {
   }).join(', ')
 
   return (
-    <article className="overview-card donut-card">
+    <article className={`overview-card donut-card donut-card-${variant}`}>
       <div className="overview-card-head">
         <span>{title}</span>
         <small>分布占比</small>
@@ -403,9 +425,13 @@ function DepartmentCard() {
       <div className="dept-list">
         {tqcDepartmentData.map(([name, value]) => (
           <div className="dept-row" key={name}>
-            <span>{name}</span>
-            <div><i style={{ width: `${(value / max) * 100}%` }} /></div>
-            <b>{value}</b>
+            <div className="dept-row-head">
+              <span>{name}</span>
+              <b>{value}</b>
+            </div>
+            <div className="dept-track" aria-hidden="true">
+              <i style={{ width: `${(value / max) * 100}%` }} />
+            </div>
           </div>
         ))}
       </div>
@@ -482,9 +508,18 @@ function TqcSummary({ project }) {
 }
 
 function Dashboard() {
+  const dashboardRef = useRef(null)
+  const hasAnimatedProjectPageRef = useRef(false)
   const [now, setNow] = useState(new Date())
   const [currentPage, setCurrentPage] = useState(0)
   const [screenPage, setScreenPage] = useState(0)
+  const [autoPlay, setAutoPlay] = useState(true)
+  const [settingsOpen, setSettingsOpen] = useState(false)
+  const [projectIntervalSec, setProjectIntervalSec] = useState(PAGE_INTERVAL / 1000)
+  const [screenIntervalSec, setScreenIntervalSec] = useState(SCREEN_INTERVAL / 1000)
+  const [themeMode, setThemeMode] = useState('light')
+  const [projectCountdownSec, setProjectCountdownSec] = useState(PAGE_INTERVAL / 1000)
+  const [screenCountdownSec, setScreenCountdownSec] = useState(SCREEN_INTERVAL / 1000)
   const screenCount = 2
   const totalPages = Math.max(1, Math.ceil(dashboardProjects.length / PAGE_SIZE))
   const metrics = useMemo(() => {
@@ -516,24 +551,226 @@ function Dashboard() {
   }, [])
 
   useEffect(() => {
-    const screenTimer = window.setInterval(
-      () => setScreenPage((page) => (page + 1) % screenCount),
-      SCREEN_INTERVAL,
-    )
+    if (!autoPlay || settingsOpen) return undefined
+    const intervalMs = screenIntervalSec * 1000
+    let deadline = Date.now() + intervalMs
+
+    setScreenCountdownSec(secondsUntil(deadline))
+    const screenTimer = window.setInterval(() => {
+      const remaining = secondsUntil(deadline)
+      setScreenCountdownSec(remaining)
+      if (remaining <= 0) {
+        setScreenPage((page) => (page + 1) % screenCount)
+        deadline = Date.now() + intervalMs
+        setScreenCountdownSec(secondsUntil(deadline))
+      }
+    }, TIMER_TICK)
+
     return () => window.clearInterval(screenTimer)
-  }, [screenCount])
+  }, [autoPlay, screenCount, screenIntervalSec, settingsOpen])
 
   useEffect(() => {
-    if (totalPages <= 1 || screenPage !== 0) return undefined
-    const pageTimer = window.setInterval(
-      () => setCurrentPage((page) => (page + 1) % totalPages),
-      PAGE_INTERVAL,
-    )
+    if (!autoPlay || settingsOpen || totalPages <= 1 || screenPage !== 0) return undefined
+    const intervalMs = projectIntervalSec * 1000
+    let deadline = Date.now() + intervalMs
+
+    setProjectCountdownSec(secondsUntil(deadline))
+    const pageTimer = window.setInterval(() => {
+      const remaining = secondsUntil(deadline)
+      setProjectCountdownSec(remaining)
+      if (remaining <= 0) {
+        setCurrentPage((page) => (page + 1) % totalPages)
+        deadline = Date.now() + intervalMs
+        setProjectCountdownSec(secondsUntil(deadline))
+      }
+    }, TIMER_TICK)
+
     return () => window.clearInterval(pageTimer)
-  }, [screenPage, totalPages])
+  }, [autoPlay, projectIntervalSec, screenPage, settingsOpen, totalPages])
+
+  useEffect(() => {
+    if (!autoPlay || settingsOpen) return
+    setProjectCountdownSec(projectIntervalSec)
+    setScreenCountdownSec(screenIntervalSec)
+  }, [autoPlay, projectIntervalSec, screenIntervalSec, screenPage, settingsOpen, totalPages])
+
+  useGSAP(() => {
+    if (prefersReducedMotion()) return
+
+    const sectionTargets = screenPage === 0
+      ? ['.metrics', '.project-board']
+      : ['.overview-page']
+    const itemTargets = screenPage === 0
+      ? '.metric-card'
+      : '.overview-stat, .overview-card'
+
+    const tl = gsap.timeline({ defaults: { ease: 'power3.out' } })
+    tl.fromTo(
+      sectionTargets,
+      { autoAlpha: 0, y: 18, scale: 0.992 },
+      {
+        autoAlpha: 1,
+        y: 0,
+        scale: 1,
+        duration: 0.48,
+        stagger: 0.06,
+        clearProps: 'opacity,visibility,transform',
+      },
+    )
+    tl.fromTo(
+      itemTargets,
+      { autoAlpha: 0, y: 10 },
+      {
+        autoAlpha: 1,
+        y: 0,
+        duration: 0.36,
+        stagger: { each: 0.025, from: 'start' },
+        clearProps: 'opacity,visibility,transform',
+      },
+      '-=0.26',
+    )
+  }, { scope: dashboardRef, dependencies: [screenPage] })
+
+  useGSAP(() => {
+    if (screenPage !== 0 || prefersReducedMotion()) return
+    if (!hasAnimatedProjectPageRef.current) {
+      hasAnimatedProjectPageRef.current = true
+      return
+    }
+
+    gsap.fromTo(
+      '.project-row',
+      { autoAlpha: 0, y: 12 },
+      {
+        autoAlpha: 1,
+        y: 0,
+        duration: 0.36,
+        stagger: 0.035,
+        ease: 'power2.out',
+        clearProps: 'opacity,visibility,transform',
+      },
+    )
+  }, { scope: dashboardRef, dependencies: [currentPage] })
+
+  useGSAP(() => {
+    if (screenPage !== 1 || prefersReducedMotion()) return
+
+    const tl = gsap.timeline({
+      delay: 0.08,
+      defaults: { ease: 'power3.out' },
+    })
+
+    tl.fromTo(
+      '.trend-grid i',
+      { scaleX: 0, transformOrigin: 'left center' },
+      {
+        scaleX: 1,
+        duration: 0.46,
+        stagger: 0.025,
+        clearProps: 'transform',
+      },
+      0,
+    )
+    tl.fromTo(
+      '.trend-bars i',
+      { scaleY: 0, transformOrigin: 'bottom center' },
+      {
+        scaleY: 1,
+        duration: 0.72,
+        stagger: { each: 0.012, from: 'start' },
+        clearProps: 'transform',
+      },
+      0.08,
+    )
+    tl.fromTo(
+      '.trend-bars b',
+      { autoAlpha: 0, y: 5 },
+      {
+        autoAlpha: 1,
+        y: 0,
+        duration: 0.28,
+        stagger: 0.01,
+        clearProps: 'opacity,visibility,transform',
+      },
+      0.38,
+    )
+    tl.fromTo(
+      '.donut',
+      { autoAlpha: 0, scale: 0.88, rotate: -8 },
+      {
+        autoAlpha: 1,
+        scale: 1,
+        rotate: 0,
+        duration: 0.52,
+        stagger: 0.06,
+        clearProps: 'opacity,visibility,transform',
+      },
+      0.14,
+    )
+    tl.fromTo(
+      '.donut-list span',
+      { autoAlpha: 0, x: 8 },
+      {
+        autoAlpha: 1,
+        x: 0,
+        duration: 0.32,
+        stagger: 0.022,
+        clearProps: 'opacity,visibility,transform',
+      },
+      0.28,
+    )
+    tl.fromTo(
+      '.dept-row',
+      { autoAlpha: 0, y: 8 },
+      {
+        autoAlpha: 1,
+        y: 0,
+        duration: 0.34,
+        stagger: 0.04,
+        clearProps: 'opacity,visibility,transform',
+      },
+      0.18,
+    )
+    tl.fromTo(
+      '.dept-track i',
+      { scaleX: 0, transformOrigin: 'left center' },
+      {
+        scaleX: 1,
+        duration: 0.64,
+        stagger: 0.04,
+        clearProps: 'transform',
+      },
+      0.34,
+    )
+    tl.fromTo(
+      '.mini-ring',
+      { autoAlpha: 0, scale: 0.86, rotate: -8 },
+      {
+        autoAlpha: 1,
+        scale: 1,
+        rotate: 0,
+        duration: 0.42,
+        stagger: 0.04,
+        clearProps: 'opacity,visibility,transform',
+      },
+      0.22,
+    )
+    tl.fromTo(
+      '.ring-item span',
+      { autoAlpha: 0, y: 5 },
+      {
+        autoAlpha: 1,
+        y: 0,
+        duration: 0.28,
+        stagger: 0.04,
+        clearProps: 'opacity,visibility,transform',
+      },
+      0.36,
+    )
+  }, { scope: dashboardRef, dependencies: [screenPage] })
 
   return (
-    <main className={`dashboard ${screenPage === 1 ? 'dashboard-overview' : ''}`}>
+    <main ref={dashboardRef} className={`dashboard theme-${themeMode} ${screenPage === 1 ? 'dashboard-overview' : ''}`}>
       <Header
         now={now}
         title={screenPage === 0 ? '项目组合里程碑进度与 TQC 看板' : '项目信息概览'}
@@ -597,8 +834,104 @@ function Dashboard() {
             />
           ))}
         </div>
-        <span className="page-timer">{screenPage === 0 ? `${PAGE_INTERVAL / 1000} 秒项目翻页` : `${SCREEN_INTERVAL / 1000} 秒看板翻页`}</span>
+        <span className="page-timer">
+          {settingsOpen
+            ? '设置中暂停轮播'
+            : autoPlay
+              ? (screenPage === 0 && totalPages > 1
+                ? `${projectCountdownSec} 秒后项目翻页`
+                : `${screenCountdownSec} 秒后看板翻页`)
+              : '已暂停自动轮播'}
+        </span>
       </nav>
+
+      <button
+        type="button"
+        className="settings-button"
+        aria-label="打开看板设置"
+        onClick={() => setSettingsOpen(true)}
+      >
+        <Settings size={18} strokeWidth={1.7} />
+      </button>
+
+      {settingsOpen && (
+        <div className="settings-layer" role="dialog" aria-modal="true" aria-label="看板设置">
+          <button type="button" className="settings-backdrop" aria-label="关闭设置" onClick={() => setSettingsOpen(false)} />
+          <section className="settings-panel">
+            <div className="settings-head">
+              <div>
+                <span>看板设置</span>
+                <small>调试时打开面板会临时暂停轮播</small>
+              </div>
+              <button type="button" aria-label="关闭设置" onClick={() => setSettingsOpen(false)}>
+                <X size={18} strokeWidth={1.7} />
+              </button>
+            </div>
+
+            <div className="settings-row">
+              <div>
+                <b>自动轮播</b>
+                <small>控制看板页和项目页自动切换</small>
+              </div>
+              <label className="settings-switch">
+                <input
+                  type="checkbox"
+                  checked={autoPlay}
+                  onChange={(event) => setAutoPlay(event.target.checked)}
+                />
+                <span aria-hidden="true" />
+              </label>
+            </div>
+
+            <div className="settings-grid">
+              <label>
+                <span>项目翻页时间</span>
+                <input
+                  type="number"
+                  min="5"
+                  max="120"
+                  step="1"
+                  value={projectIntervalSec}
+                  onChange={(event) => setProjectIntervalSec(Math.max(5, Math.min(120, Number(event.target.value) || 5)))}
+                />
+                <em>秒</em>
+              </label>
+              <label>
+                <span>看板轮播时间</span>
+                <input
+                  type="number"
+                  min="10"
+                  max="180"
+                  step="1"
+                  value={screenIntervalSec}
+                  onChange={(event) => setScreenIntervalSec(Math.max(10, Math.min(180, Number(event.target.value) || 10)))}
+                />
+                <em>秒</em>
+              </label>
+            </div>
+
+            <div className="settings-theme">
+              <span>显示模式</span>
+              <div>
+                <button
+                  type="button"
+                  className={themeMode === 'light' ? 'active' : ''}
+                  onClick={() => setThemeMode('light')}
+                >
+                  浅色
+                </button>
+                <button
+                  type="button"
+                  className={themeMode === 'dark' ? 'active' : ''}
+                  onClick={() => setThemeMode('dark')}
+                >
+                  暗色
+                </button>
+              </div>
+            </div>
+          </section>
+        </div>
+      )}
     </main>
   )
 }

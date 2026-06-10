@@ -30,7 +30,7 @@ export default function Dashboard() {
     const page = new URLSearchParams(window.location.search).get('page')
     return page === 'overview' ? 1 : 0
   })
-  const [autoPlay, setAutoPlay] = useState(false)
+  const [autoPlay, setAutoPlay] = useState(true)
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [projectIntervalSec, setProjectIntervalSec] = useState(PAGE_INTERVAL / 1000)
   const [screenIntervalSec, setScreenIntervalSec] = useState(SCREEN_INTERVAL / 1000)

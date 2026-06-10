@@ -12,10 +12,11 @@ import {
   X,
 } from 'lucide-react'
 import MilestoneChart from './MilestoneChart'
+import StageTimelineCard from './StageTimelineCard'
 
 gsap.registerPlugin(useGSAP)
 
-const PAGE_SIZE = 7
+const PAGE_SIZE = 5
 const PAGE_INTERVAL = 12000
 const SCREEN_INTERVAL = 36000
 const TIMER_TICK = 250
@@ -40,15 +41,15 @@ const projects = [
     currentIndex: 7,
     health: 'normal',
     nodes: [
-      ['立项', '2024.11.22', 'done'],
-      ['需求冻结', '12.6', 'done'],
-      ['第一阶段交付', '12.31', 'done'],
-      ['Hdrvivid sdk', '2025.3.31', 'done'],
-      ['第二阶段交付', '3.31', 'done'],
-      ['APP二期(安卓)', '6.30', 'done'],
-      ['APP二期(iOS)', '7.31', 'done'],
-      ['PC/平板播放软件', '9.30', 'active'],
-      ['Hdrvivid sdk二期', '12.31', 'active'],
+      ['立项', '2024.11.22', 'done', 'concept'],
+      ['需求冻结', '12.6', 'done', 'concept'],
+      ['第一阶段交付', '12.31', 'done', 'plan'],
+      ['Hdrvivid sdk', '2025.3.31', 'done', 'develop'],
+      ['第二阶段交付', '3.31', 'done', 'develop'],
+      ['APP二期(安卓)', '6.30', 'done', 'develop'],
+      ['APP二期(iOS)', '7.31', 'done', 'develop'],
+      ['PC/平板播放软件', '9.30', 'active', 'verify'],
+      ['Hdrvivid sdk二期', '12.31', 'active', 'release'],
     ],
     summary: [
       ['进度', '里程碑正常', 'green'],
@@ -272,6 +273,8 @@ function MetricCard({ item }) {
 }
 
 function Header({ now, title }) {
+  const navItems = ['项目节点图', '项目总览', '数据总览', '风险总览']
+  const activeNav = title.includes('概览') ? '项目总览' : '项目节点图'
   const dateText = new Intl.DateTimeFormat('zh-CN', {
     year: 'numeric',
     month: '2-digit',
@@ -289,10 +292,19 @@ function Header({ now, title }) {
     <header className="topbar">
       <div className="brand">
         <img src="/logotext.png" alt="马栏山音视频实验室" />
+        <h1>BI 项目数据看板</h1>
       </div>
-      <div className="header-title">
-        <h1>{title}</h1>
-      </div>
+      <nav className="header-tabs" aria-label="看板栏目">
+        {navItems.map((item) => (
+          <span
+            key={item}
+            className={item === activeNav ? 'active' : undefined}
+            aria-current={item === activeNav ? 'page' : undefined}
+          >
+            {item}
+          </span>
+        ))}
+      </nav>
       <div className="header-meta">
         <div className="live-time">
           <span>{dateText}</span>
@@ -515,11 +527,16 @@ function Dashboard() {
   const [now, setNow] = useState(new Date())
   const [currentPage, setCurrentPage] = useState(0)
   const [screenPage, setScreenPage] = useState(0)
-  const [autoPlay, setAutoPlay] = useState(true)
+  const [autoPlay, setAutoPlay] = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [projectIntervalSec, setProjectIntervalSec] = useState(PAGE_INTERVAL / 1000)
   const [screenIntervalSec, setScreenIntervalSec] = useState(SCREEN_INTERVAL / 1000)
-  const [themeMode, setThemeMode] = useState('light')
+  const [themeMode, setThemeMode] = useState(() => (
+    typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('theme') === 'dark'
+      ? 'dark'
+      : 'light'
+  ))
+  const [cardStyle, setCardStyle] = useState('stage')
   const [projectCountdownSec, setProjectCountdownSec] = useState(PAGE_INTERVAL / 1000)
   const [screenCountdownSec, setScreenCountdownSec] = useState(SCREEN_INTERVAL / 1000)
   const screenCount = 2
@@ -817,27 +834,41 @@ function Dashboard() {
               style={{ '--rows-per-page': PAGE_SIZE }}
               key={currentPage}
             >
-              {visibleProjects.map((project, slotIndex) => (
-                <div className="project-row" key={project.id}>
-                  <div className="cell project-info">
-                    <span className="project-index">{currentPage * PAGE_SIZE + slotIndex + 1}</span>
-                    <div className="project-copy">
-                      <div className="project-title">
-                        <b>{project.name}</b>
-                        {project.sub && <span>{project.sub}</span>}
+              {visibleProjects.map((project, slotIndex) => {
+                const rowIndex = currentPage * PAGE_SIZE + slotIndex + 1
+
+                if (cardStyle === 'stage') {
+                  return (
+                    <StageTimelineCard
+                      project={project}
+                      index={rowIndex}
+                      key={project.id}
+                    />
+                  )
+                }
+
+                return (
+                  <div className="project-row" key={project.id}>
+                    <div className="cell project-info">
+                      <span className="project-index">{rowIndex}</span>
+                      <div className="project-copy">
+                        <div className="project-title">
+                          <b>{project.name}</b>
+                          {project.sub && <span>{project.sub}</span>}
+                        </div>
+                        <div className="project-meta-line">
+                          <span>{project.owner}</span>
+                          <i />
+                          <span>{project.dept}</span>
+                        </div>
                       </div>
-                      <div className="project-meta-line">
-                        <span>{project.owner}</span>
-                        <i />
-                        <span>{project.dept}</span>
-                      </div>
+                      <TqcStatus statuses={project.statuses} />
                     </div>
-                    <TqcStatus statuses={project.statuses} />
+                    <div className="cell timeline-cell"><MilestoneChart project={project} /></div>
+                    <div className="cell summary-cell"><TqcSummary project={project} /></div>
                   </div>
-                  <div className="cell timeline-cell"><MilestoneChart project={project} /></div>
-                  <div className="cell summary-cell"><TqcSummary project={project} /></div>
-                </div>
-              ))}
+                )
+              })}
             </div>
           </section>
         </>
@@ -953,6 +984,26 @@ function Dashboard() {
                   onClick={() => setThemeMode('dark')}
                 >
                   暗色
+                </button>
+              </div>
+            </div>
+
+            <div className="settings-theme">
+              <span>卡片样式</span>
+              <div>
+                <button
+                  type="button"
+                  className={cardStyle === 'stage' ? 'active' : ''}
+                  onClick={() => setCardStyle('stage')}
+                >
+                  阶段时间轴
+                </button>
+                <button
+                  type="button"
+                  className={cardStyle === 'classic' ? 'active' : ''}
+                  onClick={() => setCardStyle('classic')}
+                >
+                  原始卡片
                 </button>
               </div>
             </div>

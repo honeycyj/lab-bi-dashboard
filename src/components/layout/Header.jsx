@@ -8,6 +8,8 @@ export default function Header({ now, title, onSelectScreen }) {
     year: 'numeric',
     month: '2-digit',
     day: '2-digit',
+  }).format(now)
+  const weekdayText = new Intl.DateTimeFormat('zh-CN', {
     weekday: 'short',
   }).format(now)
   const timeText = new Intl.DateTimeFormat('zh-CN', {
@@ -38,7 +40,10 @@ export default function Header({ now, title, onSelectScreen }) {
       </nav>
       <div className="header-meta">
         <div className="live-time">
-          <span>{dateText}</span>
+          <span className="live-date">
+            <em>{dateText}</em>
+            <small>{weekdayText}</small>
+          </span>
           <b>{timeText}</b>
         </div>
       </div>

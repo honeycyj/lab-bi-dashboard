@@ -10,6 +10,8 @@ export default function SettingsPanel({
   setProjectIntervalSec,
   screenIntervalSec,
   setScreenIntervalSec,
+  riskCardIntervalSec,
+  setRiskCardIntervalSec,
   themeMode,
   setThemeMode,
   timelineMode,
@@ -68,6 +70,18 @@ export default function SettingsPanel({
               step="1"
               value={screenIntervalSec}
               onChange={(event) => setScreenIntervalSec(Math.max(10, Math.min(180, Number(event.target.value) || 10)))}
+            />
+            <em>秒</em>
+          </label>
+          <label>
+            <span>风险卡翻转时间</span>
+            <input
+              type="number"
+              min="2"
+              max="30"
+              step="1"
+              value={riskCardIntervalSec}
+              onChange={(event) => setRiskCardIntervalSec(Math.max(2, Math.min(30, Number(event.target.value) || 2)))}
             />
             <em>秒</em>
           </label>

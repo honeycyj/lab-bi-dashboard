@@ -1,6 +1,7 @@
 export const PAGE_SIZE = 5
 export const PAGE_INTERVAL = 12000
 export const SCREEN_INTERVAL = 36000
+export const RISK_CARD_INTERVAL = 3000
 export const TIMER_TICK = 250
 export const SCREEN_COUNT = 2
 

@@ -43,7 +43,7 @@ export const projects = [
       ['技术可行性研究', '12/27', 'active', '2024/12/27'],
       ['算法V1交付', '2025/01/27', 'active', '2025/01/27'],
       ['算法V2交付&系统上线', '05/07', 'active', '2025/05/07'],
-      ['专利&i论文输出', '06/07(延)', 'active', '2025/06/07'],
+      ['专利&i论文输出', '06/07(延)', 'active', '2025/06/07', { risk: 'red', persistRisk: true }],
       ['客户验收结项', '06/27->7.31', 'active', '2025/07/31'],
     ],
     summary: [
@@ -159,13 +159,106 @@ export const dashboardProjects = [
       ['成本', '预算执行正常。', 'green'],
     ],
   },
-]
-
-export const overviewStats = [
-  { label: '在研项目', value: 45, unit: '个', tone: 'purple' },
-  { label: '运行项目', value: 29, unit: '个', tone: 'green' },
-  { label: '本月关闭', value: 16, unit: '个', tone: 'amber' },
-  { label: 'TQC风险项', value: 11, unit: '项', tone: 'red' },
+  {
+    ...projects[0],
+    id: 10,
+    name: '智能座舱体验项目',
+    sub: '（交互创新部分）',
+    owner: '陈思远',
+    dept: '产品创新部',
+    statuses: ['green', 'green', 'green'],
+    current: '方案评审',
+    currentIndex: 4,
+    health: 'normal',
+    nodes: [
+      ['立项', '12/10', 'done', 'concept', '2024/12/10'],
+      ['需求冻结', '12/24', 'done', 'concept', '2024/12/24'],
+      ['原型评审', '02/28', 'done', 'plan', '2025/02/28'],
+      ['体验验证', '05/30', 'done', 'develop', '2025/05/30'],
+      ['方案评审', '08/15', 'active', 'verify', '2025/08/15'],
+      ['产品定版', '11/30', 'active', 'release', '2025/11/30'],
+    ],
+    summary: [
+      ['进度', '里程碑正常，体验验证按计划完成。', 'green'],
+      ['质量', '关键交互链路已完成评审，暂无质量风险。', 'green'],
+      ['成本', '预算执行正常。', 'green'],
+    ],
+  },
+  {
+    ...projects[1],
+    id: 11,
+    name: '多模态产品验证项目',
+    sub: '（端侧能力部分）',
+    owner: '林澈',
+    dept: '产品创新部',
+    statuses: ['amber', 'green', 'green'],
+    current: '样机验证',
+    currentIndex: 4,
+    health: 'risk',
+    nodes: [
+      ['立项', '12/18', 'done', 'concept', '2024/12/18'],
+      ['场景定义', '01/20', 'done', 'concept', '2025/01/20'],
+      ['方案冻结', '03/15', 'done', 'plan', '2025/03/15'],
+      ['端侧联调', '06/30', 'done', 'develop', '2025/06/30'],
+      ['样机验证', '09/20', 'active', 'verify', '2025/09/20'],
+      ['试点发布', '12/20', 'active', 'release', '2025/12/20'],
+    ],
+    summary: [
+      ['进度', '样机验证资源排期偏紧，需跟进试点节奏。', 'amber'],
+      ['质量', '核心能力验证通过，待补充边界场景。', 'green'],
+      ['成本', '预算执行正常。', 'green'],
+    ],
+  },
+  {
+    ...projects[2],
+    id: 12,
+    name: '低碳算力调度项目',
+    sub: '（生态协同部分）',
+    owner: '周岚',
+    dept: '生态发展部',
+    statuses: ['green', 'green', 'green'],
+    current: '联合验证',
+    currentIndex: 4,
+    health: 'normal',
+    nodes: [
+      ['立项', '12/05', 'done', 'concept', '2024/12/05'],
+      ['伙伴确认', '01/10', 'done', 'concept', '2025/01/10'],
+      ['接口冻结', '03/20', 'done', 'plan', '2025/03/20'],
+      ['能力接入', '06/20', 'done', 'develop', '2025/06/20'],
+      ['联合验证', '09/10', 'active', 'verify', '2025/09/10'],
+      ['生态发布', '12/15', 'active', 'release', '2025/12/15'],
+    ],
+    summary: [
+      ['进度', '伙伴接入按计划推进，联合验证进行中。', 'green'],
+      ['质量', '接口稳定性验证通过，暂无遗留风险。', 'green'],
+      ['成本', '预算执行正常。', 'green'],
+    ],
+  },
+  {
+    ...projects[0],
+    id: 13,
+    name: '开放能力合作项目',
+    sub: '（开发者生态部分）',
+    owner: '赵启明',
+    dept: '生态发展部',
+    statuses: ['green', 'amber', 'green'],
+    current: '伙伴联调',
+    currentIndex: 4,
+    health: 'risk',
+    nodes: [
+      ['立项', '12/12', 'done', 'concept', '2024/12/12'],
+      ['合作范围确认', '01/15', 'done', 'concept', '2025/01/15'],
+      ['接口设计评审', '03/25', 'done', 'plan', '2025/03/25'],
+      ['SDK交付', '06/25', 'done', 'develop', '2025/06/25'],
+      ['伙伴联调', '09/18', 'active', 'verify', '2025/09/18'],
+      ['开发者发布', '12/10', 'active', 'release', '2025/12/10'],
+    ],
+    summary: [
+      ['进度', '里程碑正常，伙伴联调按批次推进。', 'green'],
+      ['质量', '部分伙伴环境差异导致联调问题，需持续跟进。', 'amber'],
+      ['成本', '预算执行正常。', 'green'],
+    ],
+  },
 ]
 
 export const trendData = [
@@ -182,13 +275,6 @@ export const trendData = [
   ['12月', 34, 28, 6],
   ['1月', 40, 30, 10],
   ['1月加场', 45, 29, 16],
-]
-
-export const tqcDepartmentData = [
-  ['产品创新部', 12],
-  ['技术研究部', 18],
-  ['媒体应用使能部', 9],
-  ['生态发展部', 6],
 ]
 
 export const defectProcessData = [

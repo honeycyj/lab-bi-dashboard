@@ -1,13 +1,13 @@
-import React from 'react'
+import React, { useMemo } from 'react'
 import {
   dataTypeData,
   defectLevelData,
   defectProcessData,
   defectStateData,
-  overviewStats,
-  tqcDepartmentData,
+  dashboardProjects,
   trendData,
 } from '../data/dashboardData'
+import { departmentBreakdownFromProjects, overviewStatsFromProjects } from '../data/projectMetrics'
 
 function OverviewStatCard({ item }) {
   return (
@@ -101,8 +101,8 @@ function DonutCard({ title, data, variant = 'default' }) {
 }
 
 
-function DepartmentCard() {
-  const max = Math.max(...tqcDepartmentData.map((item) => item[1]))
+function DepartmentCard({ data }) {
+  const max = Math.max(...data.map((item) => item.value), 1)
   return (
     <article className="overview-card department-card">
       <div className="overview-card-head">
@@ -110,10 +110,10 @@ function DepartmentCard() {
         <small>按责任部门</small>
       </div>
       <div className="dept-list">
-        {tqcDepartmentData.map(([name, value]) => (
-          <div className="dept-row" key={name}>
+        {data.map(({ label, value }) => (
+          <div className="dept-row" key={label}>
             <div className="dept-row-head">
-              <span>{name}</span>
+              <span>{label}</span>
               <b>{value}</b>
             </div>
             <div className="dept-track" aria-hidden="true">
@@ -153,6 +153,9 @@ function RingGridCard() {
 
 
 export default function OverviewPage() {
+  const overviewStats = useMemo(() => overviewStatsFromProjects(dashboardProjects), [])
+  const departmentData = useMemo(() => departmentBreakdownFromProjects(dashboardProjects), [])
+
   return (
     <section className="overview-page">
       <div className="overview-stats">
@@ -165,7 +168,7 @@ export default function OverviewPage() {
       </div>
 
       <div className="overview-grid">
-        <DepartmentCard />
+        <DepartmentCard data={departmentData} />
         <DonutCard title="缺陷处理分布" data={defectProcessData} />
         <DonutCard title="缺陷状态分布" data={defectStateData} variant="status" />
         <RingGridCard />

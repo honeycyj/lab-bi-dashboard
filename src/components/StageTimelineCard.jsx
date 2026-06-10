@@ -8,6 +8,17 @@ const worstStatus = (statuses = []) => {
   return 'green'
 }
 
+const nodeMeta = (node = []) => (
+  node.find((item) => item && typeof item === 'object' && !Array.isArray(item)) ?? {}
+)
+
+const riskToneFromNode = (node) => {
+  const risk = nodeMeta(node).risk
+  if (risk === 'red') return 'red'
+  if (risk === 'amber' || risk === 'orange') return 'orange'
+  return null
+}
+
 const timelineEdge = 4
 const dayMs = 24 * 60 * 60 * 1000
 const stageRanges = [
@@ -184,6 +195,13 @@ const timelineDatesFromNodes = (nodes) => {
   return result
 }
 
+const projectAgeDays = (project) => {
+  const startDate = interpolateMissingDates(timelineDatesFromNodes(project?.nodes ?? []))[0]
+  if (!Number.isFinite(startDate)) return null
+
+  return Math.max(0, Math.floor((Date.now() - startDate) / dayMs))
+}
+
 const interpolateMissingDates = (dates) => {
   const result = [...dates]
 
@@ -232,12 +250,15 @@ const markersFromProject = (project, timelineMode = 'linear') => {
     : timelinePositionsFromNodes(project.nodes)
 
   return project.nodes.map(([label, date], index) => {
+    const node = project.nodes[index]
     const side = index % 2 === 0 ? 'top' : 'bottom'
     const align = index === 0 ? 'left' : index === project.nodes.length - 1 ? 'right' : side === 'top' ? 'left' : 'right'
     const isCurrent = index === project.currentIndex
     const isFuture = index > project.currentIndex
     const isPast = index < project.currentIndex
     const isKeyFuture = index === project.nodes.length - 1 || /交付|验收|结项|发布|汇报|客户|版本|二期/.test(String(label))
+    const riskTone = riskToneFromNode(node)
+    const edgeAlign = positions[index] <= 14 ? 'start' : positions[index] >= 86 ? 'end' : null
 
     return {
       date,
@@ -245,11 +266,13 @@ const markersFromProject = (project, timelineMode = 'linear') => {
       x: positions[index],
       side,
       align,
-      tone: isFuture ? 'muted' : isCurrent && currentStatus === 'red' ? 'red' : isCurrent && currentStatus === 'amber' ? 'orange' : 'purple',
+      tone: riskTone ?? (isFuture ? 'muted' : isCurrent && currentStatus === 'red' ? 'red' : isCurrent && currentStatus === 'amber' ? 'orange' : 'purple'),
       current: isCurrent,
       past: isPast,
       compact: isFuture && !isKeyFuture,
+      persistentRisk: Boolean(riskTone && nodeMeta(node).persistRisk !== false),
       wide: String(label).length > 7,
+      edgeAlign,
     }
   })
 }
@@ -261,29 +284,57 @@ const compactStatusText = (text) => {
   return firstClause.length > 44 ? `${firstClause.slice(0, 44)}…` : firstClause
 }
 
+const progressStatusFromTimeline = (project) => {
+  const currentIndex = project?.currentIndex ?? -1
+  const activeNodes = (project?.nodes ?? []).filter((node, index) => (
+    index <= currentIndex || nodeMeta(node).persistRisk === true
+  ))
+  const nodeRisks = activeNodes.map((node) => nodeMeta(node).risk)
+
+  if (nodeRisks.includes('red')) return 'red'
+  if (nodeRisks.some((risk) => risk === 'amber' || risk === 'orange')) return 'amber'
+  return 'green'
+}
+
 const statusFromProject = (project) => {
   if (!project?.summary?.length) return []
   const codes = ['T', 'Q', 'C']
+  const timelineProgressStatus = progressStatusFromTimeline(project)
 
   return project.summary.slice(0, 3).map(([label, text, status], index) => ({
     code: codes[index] ?? label.slice(0, 1),
     label,
     text: compactStatusText(text),
-    status: normalizeStatus(status),
+    status: index === 0 ? worstStatus([normalizeStatus(status), timelineProgressStatus]) : normalizeStatus(status),
   }))
 }
 
 function StageTimeline({ markers, progress = 0, stages = [], timelineMode = 'linear' }) {
   const isMilestone = timelineMode === 'milestone'
-  const currentIndex = markers.findIndex((marker) => marker.current)
-  const currentMarker = currentIndex >= 0 ? markers[currentIndex] : null
-  const alertTone = currentMarker?.tone === 'red' || currentMarker?.tone === 'orange' ? currentMarker.tone : null
-  const previousMarker = currentIndex > 0 ? markers[currentIndex - 1] : null
-  const nextMarker = currentIndex === 0 ? markers[1] : null
-  const alertStart = previousMarker?.x ?? currentMarker?.x ?? 0
-  const alertEnd = previousMarker ? currentMarker?.x : nextMarker?.x
-  const alertLeft = Math.min(alertStart, alertEnd ?? alertStart)
-  const alertWidth = Math.abs((alertEnd ?? alertStart) - alertStart)
+  const trackStart = markers[0]?.x ?? timelineEdge
+  const trackEnd = markers[markers.length - 1]?.x ?? (100 - timelineEdge)
+  const trackLeft = Math.min(trackStart, trackEnd)
+  const trackWidth = Math.max(Math.abs(trackEnd - trackStart), 1)
+  const fillWidth = Math.min(Math.max(progress - trackLeft, 0), trackWidth)
+  const alertSegments = markers.flatMap((marker, index) => {
+    const alertTone = marker.tone === 'red' || marker.tone === 'orange' ? marker.tone : null
+    const shouldShowAlert = alertTone && (marker.current || marker.persistentRisk)
+    if (!shouldShowAlert) return []
+
+    const previousMarker = index > 0 ? markers[index - 1] : null
+    const nextMarker = index === 0 ? markers[1] : null
+    const alertStart = previousMarker?.x ?? marker.x
+    const alertEnd = previousMarker ? marker.x : nextMarker?.x
+    const alertWidth = Math.abs((alertEnd ?? alertStart) - alertStart)
+    if (!alertWidth) return []
+
+    return [{
+      left: Math.min(alertStart, alertEnd ?? alertStart),
+      width: alertWidth,
+      tone: alertTone,
+      key: `${marker.date}-${marker.label || 'node'}-${alertTone}`,
+    }]
+  })
 
   return (
     <div className={`stage-timeline stage-timeline-${isMilestone ? 'milestone' : 'linear'}`} aria-label="项目节点时间轴">
@@ -307,23 +358,27 @@ function StageTimeline({ markers, progress = 0, stages = [], timelineMode = 'lin
         </div>
       ) : (
         <div className="stage-timeline-track" aria-hidden="true">
-          <span className="stage-timeline-track-base" />
+          <span
+            className="stage-timeline-track-base"
+            style={{ left: `${trackLeft}%`, width: `${trackWidth}%` }}
+          />
           <span
             className="stage-timeline-track-fill"
-            style={{ width: `${Math.min(Math.max(progress, 0), 100)}%` }}
+            style={{ left: `${trackLeft}%`, width: `${fillWidth}%` }}
           />
-          {alertTone && alertWidth > 0 && (
+          {alertSegments.map((segment) => (
             <span
-              className={`stage-timeline-track-alert stage-timeline-track-alert-${alertTone}`}
-              style={{ left: `${alertLeft}%`, width: `${alertWidth}%` }}
+              className={`stage-timeline-track-alert stage-timeline-track-alert-${segment.tone}`}
+              style={{ left: `${segment.left}%`, width: `${segment.width}%` }}
+              key={segment.key}
             />
-          )}
+          ))}
         </div>
       )}
 
       {markers.map((marker) => (
         <div
-          className={`stage-timeline-marker stage-timeline-marker-${marker.tone} side-${marker.side} align-${marker.align} ${marker.wide ? 'wide' : ''} ${marker.current ? 'current' : ''} ${marker.past ? 'past' : ''} ${marker.compact ? 'compact' : ''}`}
+          className={`stage-timeline-marker stage-timeline-marker-${marker.tone} side-${marker.side} align-${marker.align} ${marker.edgeAlign ? `edge-${marker.edgeAlign}` : ''} ${marker.wide ? 'wide' : ''} ${marker.current ? 'current' : ''} ${marker.past ? 'past' : ''} ${marker.compact ? 'compact' : ''}`}
           style={{ left: `${marker.x}%` }}
           key={`${marker.date}-${marker.label || 'node'}-${marker.x}`}
         >
@@ -342,32 +397,40 @@ function StageTimeline({ markers, progress = 0, stages = [], timelineMode = 'lin
 
 export default function StageTimelineCard({
   project,
-  index = 1,
   timelineMode = 'linear',
 }) {
   const cardTitle = project?.name ?? ''
-  const cardSubtitle = project?.sub ?? ''
+  const cardSubtitle = String(project?.sub ?? '').replace(/^[（(]\s*/, '').replace(/\s*[）)]$/, '')
   const cardOwner = project?.owner ?? ''
   const cardDepartment = project?.dept ?? ''
+  const elapsedDays = projectAgeDays(project)
   const cardMarkers = markersFromProject(project, timelineMode)
   const currentMarker = cardMarkers.find((marker) => marker.current)
   const timelineProgress = currentMarker?.x ?? 0
   const cardStages = stagesFromProject(project)
   const cardStatuses = statusFromProject(project)
+  const summaryTone = worstStatus(cardStatuses.map((item) => item.status))
 
   return (
     <div className="project-row stage-timeline-card">
       <div className="cell project-info">
-        <span className="project-index">{index}</span>
         <div className="project-copy">
           <div className="project-title">
             <b>{cardTitle}</b>
             {cardSubtitle && <span>{cardSubtitle}</span>}
           </div>
-          <div className="project-meta-line">
-            <span>{cardOwner}</span>
-            <i />
-            <span>{cardDepartment}</span>
+          <div className="project-meta-block">
+            {elapsedDays !== null && (
+              <div className="project-age" aria-label={`立项至今 ${elapsedDays} 天`}>
+                <strong>{elapsedDays}</strong>
+                <span>立项至今 / 天</span>
+              </div>
+            )}
+            <div className="project-meta-line">
+              <span>{cardOwner}</span>
+              <i />
+              <span>{cardDepartment}</span>
+            </div>
           </div>
         </div>
       </div>
@@ -379,14 +442,12 @@ export default function StageTimelineCard({
           timelineMode={timelineMode}
         />
       </div>
-      <div className="cell summary-cell">
+      <div className={`cell summary-cell summary-cell-${summaryTone}`}>
         <div className="demo-status-panel" aria-label="TQC 亮灯状态">
           {cardStatuses.map((item) => (
-            <div className="demo-status-row" key={item.code}>
-              <span className="demo-status-code">{item.code}</span>
-              <i className={`status-light ${item.status}`} />
-              <b>{item.label}</b>
-              <span>{item.text}</span>
+            <div className={`demo-status-row demo-status-row-${item.status}`} key={item.code}>
+              <span className={`demo-status-code demo-status-code-${item.status}`}>{item.label}</span>
+              <span className="demo-status-text">{item.text}</span>
             </div>
           ))}
         </div>

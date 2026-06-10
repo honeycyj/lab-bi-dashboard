@@ -4,6 +4,7 @@ import { useGSAP } from '@gsap/react'
 import { Settings } from 'lucide-react'
 import {
   PAGE_INTERVAL,
+  RISK_CARD_INTERVAL,
   PAGE_SIZE,
   SCREEN_COUNT,
   SCREEN_INTERVAL,
@@ -11,7 +12,8 @@ import {
 } from './constants'
 import Header from '../components/layout/Header'
 import SettingsPanel from '../components/settings/SettingsPanel'
-import { dashboardProjects, tqcDepartmentData } from '../data/dashboardData'
+import { dashboardProjects } from '../data/dashboardData'
+import { projectNodeMetricsFromProjects } from '../data/projectMetrics'
 import OverviewPage from '../pages/OverviewPage'
 import ProjectNodesPage from '../pages/ProjectNodesPage'
 import { prefersReducedMotion, secondsUntil } from '../utils/time'
@@ -24,14 +26,15 @@ export default function Dashboard() {
   const [now, setNow] = useState(new Date())
   const [currentPage, setCurrentPage] = useState(0)
   const [screenPage, setScreenPage] = useState(() => {
-    if (typeof window === 'undefined') return 1
+    if (typeof window === 'undefined') return 0
     const page = new URLSearchParams(window.location.search).get('page')
-    return page === 'nodes' ? 0 : 1
+    return page === 'overview' ? 1 : 0
   })
-  const [autoPlay, setAutoPlay] = useState(true)
+  const [autoPlay, setAutoPlay] = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [projectIntervalSec, setProjectIntervalSec] = useState(PAGE_INTERVAL / 1000)
   const [screenIntervalSec, setScreenIntervalSec] = useState(SCREEN_INTERVAL / 1000)
+  const [riskCardIntervalSec, setRiskCardIntervalSec] = useState(RISK_CARD_INTERVAL / 1000)
   const [themeMode, setThemeMode] = useState(() => (
     typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('theme') === 'dark'
       ? 'dark'
@@ -51,64 +54,7 @@ export default function Dashboard() {
   const [projectCountdownSec, setProjectCountdownSec] = useState(PAGE_INTERVAL / 1000)
   const [screenCountdownSec, setScreenCountdownSec] = useState(SCREEN_INTERVAL / 1000)
   const totalPages = Math.max(1, Math.ceil(dashboardProjects.length / PAGE_SIZE))
-  const metrics = useMemo(() => {
-    const total = tqcDepartmentData.reduce((sum, [, value]) => sum + value, 0)
-    const normal = dashboardProjects.filter((project) => project.statuses.every((status) => status === 'green')).length
-    const riskSummary = (index) => {
-      const red = dashboardProjects.filter((project) => project.statuses[index] === 'red').length
-      const amber = dashboardProjects.filter((project) => project.statuses[index] === 'amber').length
-      return {
-        value: red + amber,
-        red,
-        amber,
-      }
-    }
-    const progress = riskSummary(0)
-    const quality = riskSummary(1)
-    const cost = riskSummary(2)
-
-    return [
-      {
-        label: 'TQC 项目数',
-        value: total,
-        unit: '个',
-        tone: 'neutral',
-        breakdown: tqcDepartmentData.map(([label, value]) => ({ label, value })),
-      },
-      {
-        label: '正常推进项目数',
-        subtitle: '全绿灯',
-        value: normal,
-        unit: '个',
-        tone: 'green',
-        helper: 'T / Q / C 均为绿色',
-      },
-      {
-        label: '进度风险灯',
-        value: progress.value,
-        unit: '个',
-        tone: progress.red > 0 ? 'red' : 'amber',
-        red: progress.red,
-        amber: progress.amber,
-      },
-      {
-        label: '质量风险灯',
-        value: quality.value,
-        unit: '个',
-        tone: quality.red > 0 ? 'red' : 'amber',
-        red: quality.red,
-        amber: quality.amber,
-      },
-      {
-        label: '成本风险灯',
-        value: cost.value,
-        unit: '个',
-        tone: cost.red > 0 ? 'red' : cost.amber > 0 ? 'amber' : 'green',
-        red: cost.red,
-        amber: cost.amber,
-      },
-    ]
-  }, [])
+  const metrics = useMemo(() => projectNodeMetricsFromProjects(dashboardProjects), [])
   const visibleProjects = useMemo(
     () => dashboardProjects.slice(currentPage * PAGE_SIZE, (currentPage + 1) * PAGE_SIZE),
     [currentPage],
@@ -172,7 +118,7 @@ export default function Dashboard() {
     if (prefersReducedMotion()) return
 
     const sectionTargets = screenPage === 0 ? ['.metrics', '.project-board'] : ['.overview-page']
-    const itemTargets = screenPage === 0 ? '.metric-card' : '.overview-stat, .overview-card'
+    const itemTargets = screenPage === 0 ? '.metric-card, .project-row' : '.overview-stat, .overview-card'
     const tl = gsap.timeline({ defaults: { ease: 'power3.out' } })
 
     tl.fromTo(
@@ -189,12 +135,21 @@ export default function Dashboard() {
     )
     tl.fromTo(
       itemTargets,
-      { autoAlpha: 0, y: 10 },
+      screenPage === 0
+        ? {
+          autoAlpha: 0,
+          rotationY: -42,
+          transformPerspective: 1000,
+          transformOrigin: 'center center',
+        }
+        : { autoAlpha: 0, y: 10 },
       {
         autoAlpha: 1,
         y: 0,
-        duration: 0.36,
-        stagger: { each: 0.025, from: 'start' },
+        rotationY: 0,
+        duration: screenPage === 0 ? 0.58 : 0.36,
+        stagger: { each: screenPage === 0 ? 0.045 : 0.025, from: 'start' },
+        ease: screenPage === 0 ? 'power3.out' : 'power3.out',
         clearProps: 'opacity,visibility,transform',
       },
       '-=0.26',
@@ -210,13 +165,20 @@ export default function Dashboard() {
 
     gsap.fromTo(
       '.project-row',
-      { autoAlpha: 0, y: 12 },
+      {
+        autoAlpha: 0,
+        rotationY: -72,
+        scaleX: 0.96,
+        transformPerspective: 1000,
+        transformOrigin: 'center center',
+      },
       {
         autoAlpha: 1,
-        y: 0,
-        duration: 0.36,
-        stagger: 0.035,
-        ease: 'power2.out',
+        rotationY: 0,
+        scaleX: 1,
+        duration: 0.72,
+        stagger: 0.09,
+        ease: 'power3.out',
         clearProps: 'opacity,visibility,transform',
       },
     )
@@ -251,6 +213,7 @@ export default function Dashboard() {
           visibleProjects={visibleProjects}
           currentPage={currentPage}
           timelineMode={timelineMode}
+          riskCardIntervalSec={riskCardIntervalSec}
         />
       ) : (
         <OverviewPage />
@@ -301,6 +264,8 @@ export default function Dashboard() {
         setProjectIntervalSec={setProjectIntervalSec}
         screenIntervalSec={screenIntervalSec}
         setScreenIntervalSec={setScreenIntervalSec}
+        riskCardIntervalSec={riskCardIntervalSec}
+        setRiskCardIntervalSec={setRiskCardIntervalSec}
         themeMode={themeMode}
         setThemeMode={setThemeMode}
         timelineMode={timelineMode}

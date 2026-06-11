@@ -1,12 +1,10 @@
+import { normalizeStatus } from './status'
+
 const statusLabels = [
   { label: '进度风险灯', index: 0 },
   { label: '质量风险灯', index: 1 },
   { label: '成本风险灯', index: 2 },
 ]
-
-const normalizeStatus = (status) => (
-  status === 'red' ? 'red' : status === 'amber' ? 'amber' : 'green'
-)
 
 export const departmentBreakdownFromProjects = (projects = []) => {
   const counts = new Map()

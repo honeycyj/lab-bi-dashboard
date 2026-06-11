@@ -13,7 +13,7 @@ import {
 import Header from '../components/layout/Header'
 import SettingsPanel from '../components/settings/SettingsPanel'
 import { dashboardProjects } from '../data/dashboardData'
-import { projectNodeMetricsFromProjects } from '../data/projectMetrics'
+import { createProjectNodePageModel } from '../data/projectModel'
 import OverviewPage from '../pages/OverviewPage'
 import ProjectNodesPage from '../pages/ProjectNodesPage'
 import { prefersReducedMotion, secondsUntil } from '../utils/time'
@@ -53,12 +53,11 @@ export default function Dashboard() {
   ))
   const [projectCountdownSec, setProjectCountdownSec] = useState(PAGE_INTERVAL / 1000)
   const [screenCountdownSec, setScreenCountdownSec] = useState(SCREEN_INTERVAL / 1000)
-  const totalPages = Math.max(1, Math.ceil(dashboardProjects.length / PAGE_SIZE))
-  const metrics = useMemo(() => projectNodeMetricsFromProjects(dashboardProjects), [])
-  const visibleProjects = useMemo(
-    () => dashboardProjects.slice(currentPage * PAGE_SIZE, (currentPage + 1) * PAGE_SIZE),
+  const nodePageModel = useMemo(
+    () => createProjectNodePageModel(dashboardProjects, currentPage, PAGE_SIZE),
     [currentPage],
   )
+  const totalPages = nodePageModel.totalPages
 
   useEffect(() => {
     const clockTimer = window.setInterval(() => setNow(new Date()), 1000)
@@ -209,9 +208,10 @@ export default function Dashboard() {
 
       {screenPage === 0 ? (
         <ProjectNodesPage
-          metrics={metrics}
-          visibleProjects={visibleProjects}
-          currentPage={currentPage}
+          metrics={nodePageModel.metrics}
+          visibleProjects={nodePageModel.visibleProjects}
+          currentPage={nodePageModel.currentPage}
+          rowsPerPage={nodePageModel.rowsPerPage}
           timelineMode={timelineMode}
           riskCardIntervalSec={riskCardIntervalSec}
         />

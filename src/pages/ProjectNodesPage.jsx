@@ -1,12 +1,12 @@
 import React from 'react'
 import MetricCard from '../components/MetricCard'
 import StageTimelineCard from '../components/StageTimelineCard'
-import { PAGE_SIZE } from '../app/constants'
 
 export default function ProjectNodesPage({
   metrics,
   visibleProjects,
   currentPage,
+  rowsPerPage,
   timelineMode,
   riskCardIntervalSec,
 }) {
@@ -25,7 +25,7 @@ export default function ProjectNodesPage({
       <section className="project-board">
         <div
           className="board-body"
-          style={{ '--rows-per-page': PAGE_SIZE }}
+          style={{ '--rows-per-page': rowsPerPage }}
           key={currentPage}
         >
           {visibleProjects.map((project) => (

@@ -1,16 +1,16 @@
 import React from 'react'
-
-const normalizeStatus = (status) => (status === 'red' ? 'red' : status === 'amber' ? 'amber' : 'green')
-
-const worstStatus = (statuses = []) => {
-  if (statuses.includes('red')) return 'red'
-  if (statuses.includes('amber')) return 'amber'
-  return 'green'
-}
+import { normalizeStatus, worstStatus } from '../data/status'
 
 const nodeMeta = (node = []) => (
-  node.find((item) => item && typeof item === 'object' && !Array.isArray(item)) ?? {}
+  Array.isArray(node)
+    ? node.find((item) => item && typeof item === 'object' && !Array.isArray(item)) ?? {}
+    : node ?? {}
 )
+
+const nodeLabel = (node) => (Array.isArray(node) ? node?.[0] : node?.label) ?? ''
+const nodeDisplayDate = (node) => (Array.isArray(node) ? node?.[1] : node?.displayDate) ?? ''
+const nodeStoredDate = (node) => (Array.isArray(node) ? undefined : node?.date)
+const nodePhase = (node) => (Array.isArray(node) ? node?.[3] : node?.phase)
 
 const riskToneFromNode = (node) => {
   const risk = nodeMeta(node).risk
@@ -36,7 +36,7 @@ const markerPositionOnTimeline = (index, nodeCount) => {
 }
 
 const explicitPhaseFromNode = (node) => {
-  const phase = node?.[3]
+  const phase = nodePhase(node)
   return stageKeys.includes(phase) ? phase : null
 }
 
@@ -59,7 +59,7 @@ const inferPhaseKey = (label, index, nodeCount) => {
 }
 
 const phaseKeyForNode = (node, index, nodes) => (
-  explicitPhaseFromNode(node) ?? inferPhaseKey(node?.[0], index, nodes.length)
+  explicitPhaseFromNode(node) ?? inferPhaseKey(nodeLabel(node), index, nodes.length)
 )
 
 const stageNodeIndexesFor = (nodes, key) => (
@@ -133,9 +133,10 @@ const parseDateParts = (rawDate) => {
 }
 
 const timelineDatePartFromNode = (node) => (
-  parseDateParts(node?.[4])
-  ?? parseDateParts(node?.[3])
-  ?? parseDateParts(node?.[1])
+  parseDateParts(nodeStoredDate(node))
+  ?? parseDateParts(Array.isArray(node) ? node?.[4] : undefined)
+  ?? parseDateParts(Array.isArray(node) ? node?.[3] : undefined)
+  ?? parseDateParts(nodeDisplayDate(node))
 )
 
 const timelineDatesFromNodes = (nodes) => {
@@ -249,8 +250,9 @@ const markersFromProject = (project, timelineMode = 'linear') => {
     ? project.nodes.map((_, index) => markerPositionInStage(index, project.nodes))
     : timelinePositionsFromNodes(project.nodes)
 
-  return project.nodes.map(([label, date], index) => {
-    const node = project.nodes[index]
+  return project.nodes.map((node, index) => {
+    const label = nodeLabel(node)
+    const date = nodeDisplayDate(node)
     const side = index % 2 === 0 ? 'top' : 'bottom'
     const align = index === 0 ? 'left' : index === project.nodes.length - 1 ? 'right' : side === 'top' ? 'left' : 'right'
     const isCurrent = index === project.currentIndex
@@ -301,12 +303,18 @@ const statusFromProject = (project) => {
   const codes = ['T', 'Q', 'C']
   const timelineProgressStatus = progressStatusFromTimeline(project)
 
-  return project.summary.slice(0, 3).map(([label, text, status], index) => ({
-    code: codes[index] ?? label.slice(0, 1),
-    label,
-    text: compactStatusText(text),
-    status: index === 0 ? worstStatus([normalizeStatus(status), timelineProgressStatus]) : normalizeStatus(status),
-  }))
+  return project.summary.slice(0, 3).map((item, index) => {
+    const label = Array.isArray(item) ? item[0] : item.label
+    const text = Array.isArray(item) ? item[1] : item.text
+    const status = Array.isArray(item) ? item[2] : item.status
+
+    return {
+      code: codes[index] ?? label.slice(0, 1),
+      label,
+      text: compactStatusText(text),
+      status: index === 0 ? worstStatus([normalizeStatus(status), timelineProgressStatus]) : normalizeStatus(status),
+    }
+  })
 }
 
 function StageTimeline({ markers, progress = 0, stages = [], timelineMode = 'linear' }) {

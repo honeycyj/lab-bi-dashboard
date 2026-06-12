@@ -258,7 +258,7 @@ const markersFromProject = (project, timelineMode = 'linear') => {
     const isCurrent = index === project.currentIndex
     const isFuture = index > project.currentIndex
     const isPast = index < project.currentIndex
-    const isKeyFuture = index === project.nodes.length - 1 || /交付|验收|结项|发布|汇报|客户|版本|二期/.test(String(label))
+    const isKeyFuture = index === project.nodes.length - 1 || /^TR/i.test(String(label)) || /交付|验收|结项|发布|汇报|客户|版本|二期/.test(String(label))
     const riskTone = riskToneFromNode(node)
     const edgeAlign = positions[index] <= 14 ? 'start' : positions[index] >= 86 ? 'end' : null
 
@@ -319,8 +319,9 @@ const statusFromProject = (project) => {
 
 function StageTimeline({ markers, progress = 0, stages = [], timelineMode = 'linear' }) {
   const isMilestone = timelineMode === 'milestone'
-  const trackStart = markers[0]?.x ?? timelineEdge
-  const trackEnd = markers[markers.length - 1]?.x ?? (100 - timelineEdge)
+  const markerPositions = markers.map((marker) => marker.x).filter(Number.isFinite)
+  const trackStart = markerPositions.length ? Math.min(...markerPositions) : timelineEdge
+  const trackEnd = markerPositions.length ? Math.max(...markerPositions) : (100 - timelineEdge)
   const trackLeft = Math.min(trackStart, trackEnd)
   const trackWidth = Math.max(Math.abs(trackEnd - trackStart), 1)
   const fillWidth = Math.min(Math.max(progress - trackLeft, 0), trackWidth)
@@ -423,7 +424,7 @@ export default function StageTimelineCard({
     <div className="project-row stage-timeline-card">
       <div className="cell project-info">
         <div className="project-copy">
-          <div className="project-title">
+          <div className="project-title" style={{ '--project-title-length': cardTitle.length }}>
             <b>{cardTitle}</b>
             {cardSubtitle && <span>{cardSubtitle}</span>}
           </div>

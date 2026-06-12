@@ -35,8 +35,8 @@ src/
 
 ## 常用修改位置
 
-- 修改项目节点图数据：`src/data/dashboardData.js`
-- 修改项目总览图表数据：`src/data/dashboardData.js`
+- 修改真实项目清单：`src/data/realProjectData.js`
+- 修改项目总览静态图表数据：`src/data/dashboardData.js`
 - 修改页面切换、轮播、主题状态：`src/app/Dashboard.jsx`
 - 修改顶部导航：`src/components/layout/Header.jsx`
 - 修改项目节点卡片：`src/components/StageTimelineCard.jsx`

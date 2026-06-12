@@ -4,9 +4,9 @@ import {
   defectLevelData,
   defectProcessData,
   defectStateData,
-  dashboardProjects,
   trendData,
 } from '../data/dashboardData'
+import { dashboardProjects } from '../data/realProjectData'
 import { departmentBreakdownFromProjects, overviewStatsFromProjects } from '../data/projectMetrics'
 
 function OverviewStatCard({ item }) {

@@ -12,7 +12,7 @@ import {
 } from './constants'
 import Header from '../components/layout/Header'
 import SettingsPanel from '../components/settings/SettingsPanel'
-import { dashboardProjects } from '../data/dashboardData'
+import { dashboardProjects } from '../data/realProjectData'
 import { createProjectNodePageModel } from '../data/projectModel'
 import OverviewPage from '../pages/OverviewPage'
 import ProjectNodesPage from '../pages/ProjectNodesPage'
@@ -65,7 +65,7 @@ export default function Dashboard() {
   }, [])
 
   useEffect(() => {
-    if (!autoPlay || settingsOpen) return undefined
+    if (!autoPlay || settingsOpen || screenPage !== 1) return undefined
     const intervalMs = screenIntervalSec * 1000
     let deadline = Date.now() + intervalMs
 
@@ -74,17 +74,18 @@ export default function Dashboard() {
       const remaining = secondsUntil(deadline)
       setScreenCountdownSec(remaining)
       if (remaining <= 0) {
-        setScreenPage((page) => (page + 1) % SCREEN_COUNT)
+        setCurrentPage(0)
+        setScreenPage(0)
         deadline = Date.now() + intervalMs
         setScreenCountdownSec(secondsUntil(deadline))
       }
     }, TIMER_TICK)
 
     return () => window.clearInterval(screenTimer)
-  }, [autoPlay, screenIntervalSec, settingsOpen])
+  }, [autoPlay, screenIntervalSec, screenPage, settingsOpen])
 
   useEffect(() => {
-    if (!autoPlay || settingsOpen || totalPages <= 1 || screenPage !== 0) return undefined
+    if (!autoPlay || settingsOpen || screenPage !== 0) return undefined
     const intervalMs = projectIntervalSec * 1000
     let deadline = Date.now() + intervalMs
 
@@ -93,7 +94,14 @@ export default function Dashboard() {
       const remaining = secondsUntil(deadline)
       setProjectCountdownSec(remaining)
       if (remaining <= 0) {
-        setCurrentPage((page) => (page + 1) % totalPages)
+        setCurrentPage((page) => {
+          if (page >= totalPages - 1) {
+            setScreenPage(1)
+            return 0
+          }
+
+          return page + 1
+        })
         deadline = Date.now() + intervalMs
         setProjectCountdownSec(secondsUntil(deadline))
       }
@@ -239,8 +247,8 @@ export default function Dashboard() {
           {settingsOpen
             ? '设置中暂停轮播'
             : autoPlay
-              ? (screenPage === 0 && totalPages > 1
-                ? `${projectCountdownSec} 秒后项目翻页`
+              ? (screenPage === 0
+                ? `${projectCountdownSec} 秒后${currentPage >= totalPages - 1 ? '切到总览' : '项目翻页'}`
                 : `${screenCountdownSec} 秒后看板翻页`)
               : '已暂停自动轮播'}
         </span>

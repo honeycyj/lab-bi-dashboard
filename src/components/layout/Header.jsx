@@ -14,10 +14,10 @@ const weatherLabelFromCode = (code) => {
   return '天气'
 }
 
-export default function Header({ now, title, onSelectScreen }) {
+export default function Header({ now, title, activeScreen, onSelectScreen }) {
   const [weather, setWeather] = useState(null)
   const navItems = NAV_ITEMS
-  const activeNav = title.includes('概览') ? '项目总览' : '项目节点图'
+  const activeNav = navItems.find((item) => item.screen === activeScreen)?.label
   const dateText = new Intl.DateTimeFormat('zh-CN', {
     year: 'numeric',
     month: '2-digit',

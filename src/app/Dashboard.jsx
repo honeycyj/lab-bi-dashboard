@@ -16,6 +16,8 @@ import { dashboardProjects } from '../data/realProjectData'
 import { createProjectNodePageModel } from '../data/projectModel'
 import OverviewPage from '../pages/OverviewPage'
 import ProjectNodesPage from '../pages/ProjectNodesPage'
+import UnclosedDefectsPage from '../pages/UnclosedDefectsPage'
+import DefectDistributionPage from '../pages/DefectDistributionPage'
 import { prefersReducedMotion, secondsUntil } from '../utils/time'
 
 gsap.registerPlugin(useGSAP)
@@ -28,9 +30,11 @@ export default function Dashboard() {
   const [screenPage, setScreenPage] = useState(() => {
     if (typeof window === 'undefined') return 0
     const page = new URLSearchParams(window.location.search).get('page')
+    if (page === 'distribution') return 3
+    if (page === 'defects') return 2
     return page === 'overview' ? 1 : 0
   })
-  const [autoPlay, setAutoPlay] = useState(true)
+  const [autoPlay, setAutoPlay] = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [projectIntervalSec, setProjectIntervalSec] = useState(PAGE_INTERVAL / 1000)
   const [screenIntervalSec, setScreenIntervalSec] = useState(SCREEN_INTERVAL / 1000)
@@ -65,7 +69,7 @@ export default function Dashboard() {
   }, [])
 
   useEffect(() => {
-    if (!autoPlay || settingsOpen || screenPage !== 1) return undefined
+    if (!autoPlay || settingsOpen || screenPage === 0) return undefined
     const intervalMs = screenIntervalSec * 1000
     let deadline = Date.now() + intervalMs
 
@@ -75,7 +79,7 @@ export default function Dashboard() {
       setScreenCountdownSec(remaining)
       if (remaining <= 0) {
         setCurrentPage(0)
-        setScreenPage(0)
+        setScreenPage((page) => (page >= SCREEN_COUNT - 1 ? 0 : page + 1))
         deadline = Date.now() + intervalMs
         setScreenCountdownSec(secondsUntil(deadline))
       }
@@ -124,7 +128,9 @@ export default function Dashboard() {
   useGSAP(() => {
     if (prefersReducedMotion()) return
 
-    const sectionTargets = screenPage === 0 ? ['.metrics', '.project-board'] : ['.overview-page']
+    const sectionTargets = screenPage === 0
+      ? ['.metrics', '.project-board']
+      : [screenPage === 1 ? '.overview-page' : screenPage === 2 ? '.unclosed-defects-page' : '.defect-distribution-page']
     const itemTargets = screenPage === 0 ? '.metric-card, .project-row' : '.overview-stat, .overview-card'
     const tl = gsap.timeline({ defaults: { ease: 'power3.out' } })
 
@@ -192,25 +198,40 @@ export default function Dashboard() {
   }, { scope: dashboardRef, dependencies: [currentPage] })
 
   useGSAP(() => {
-    if (screenPage !== 1 || prefersReducedMotion()) return
+    if (![1, 2, 3].includes(screenPage) || prefersReducedMotion()) return
 
     const tl = gsap.timeline({ delay: 0.08, defaults: { ease: 'power3.out' } })
-    tl.fromTo('.trend-grid i', { scaleX: 0, transformOrigin: 'left center' }, { scaleX: 1, duration: 0.46, stagger: 0.025, clearProps: 'transform' }, 0)
-    tl.fromTo('.trend-bars i', { scaleY: 0, transformOrigin: 'bottom center' }, { scaleY: 1, duration: 0.72, stagger: { each: 0.012, from: 'start' }, clearProps: 'transform' }, 0.08)
-    tl.fromTo('.trend-bars b', { autoAlpha: 0, y: 5 }, { autoAlpha: 1, y: 0, duration: 0.28, stagger: 0.01, clearProps: 'opacity,visibility,transform' }, 0.38)
-    tl.fromTo('.donut', { autoAlpha: 0, scale: 0.88, rotate: -8 }, { autoAlpha: 1, scale: 1, rotate: 0, duration: 0.52, stagger: 0.06, clearProps: 'opacity,visibility,transform' }, 0.14)
-    tl.fromTo('.donut-list span', { autoAlpha: 0, x: 8 }, { autoAlpha: 1, x: 0, duration: 0.32, stagger: 0.022, clearProps: 'opacity,visibility,transform' }, 0.28)
-    tl.fromTo('.dept-row', { autoAlpha: 0, y: 8 }, { autoAlpha: 1, y: 0, duration: 0.34, stagger: 0.04, clearProps: 'opacity,visibility,transform' }, 0.18)
-    tl.fromTo('.dept-track i', { scaleX: 0, transformOrigin: 'left center' }, { scaleX: 1, duration: 0.64, stagger: 0.04, clearProps: 'transform' }, 0.34)
-    tl.fromTo('.mini-ring', { autoAlpha: 0, scale: 0.86, rotate: -8 }, { autoAlpha: 1, scale: 1, rotate: 0, duration: 0.42, stagger: 0.04, clearProps: 'opacity,visibility,transform' }, 0.22)
-    tl.fromTo('.ring-item span', { autoAlpha: 0, y: 5 }, { autoAlpha: 1, y: 0, duration: 0.28, stagger: 0.04, clearProps: 'opacity,visibility,transform' }, 0.36)
+    if (screenPage === 1) {
+      tl.fromTo('.trend-grid i', { scaleX: 0, transformOrigin: 'left center' }, { scaleX: 1, duration: 0.46, stagger: 0.025, clearProps: 'transform' }, 0)
+      tl.fromTo('.trend-bars i', { scaleY: 0, transformOrigin: 'bottom center' }, { scaleY: 1, duration: 0.72, stagger: { each: 0.012, from: 'start' }, clearProps: 'transform' }, 0.08)
+      tl.fromTo('.trend-bars b', { autoAlpha: 0, y: 5 }, { autoAlpha: 1, y: 0, duration: 0.28, stagger: 0.01, clearProps: 'opacity,visibility,transform' }, 0.38)
+      tl.fromTo('.donut', { autoAlpha: 0, scale: 0.88, rotate: -8 }, { autoAlpha: 1, scale: 1, rotate: 0, duration: 0.52, stagger: 0.06, clearProps: 'opacity,visibility,transform' }, 0.14)
+      tl.fromTo('.donut-list span', { autoAlpha: 0, x: 8 }, { autoAlpha: 1, x: 0, duration: 0.32, stagger: 0.022, clearProps: 'opacity,visibility,transform' }, 0.28)
+      tl.fromTo('.dept-row', { autoAlpha: 0, y: 8 }, { autoAlpha: 1, y: 0, duration: 0.34, stagger: 0.04, clearProps: 'opacity,visibility,transform' }, 0.18)
+      tl.fromTo('.dept-track i', { scaleX: 0, transformOrigin: 'left center' }, { scaleX: 1, duration: 0.64, stagger: 0.04, clearProps: 'transform' }, 0.34)
+      tl.fromTo('.mini-ring', { autoAlpha: 0, scale: 0.86, rotate: -8 }, { autoAlpha: 1, scale: 1, rotate: 0, duration: 0.42, stagger: 0.04, clearProps: 'opacity,visibility,transform' }, 0.22)
+      tl.fromTo('.ring-item span', { autoAlpha: 0, y: 5 }, { autoAlpha: 1, y: 0, duration: 0.28, stagger: 0.04, clearProps: 'opacity,visibility,transform' }, 0.36)
+      return
+    }
+
+    if (screenPage === 2) {
+      tl.fromTo('.defect-bar', { scaleX: 0, transformOrigin: 'left center' }, { scaleX: 1, duration: 0.72, stagger: 0.035, clearProps: 'transform' }, 0.04)
+      tl.fromTo('.defect-rank-row strong', { autoAlpha: 0, y: 5 }, { autoAlpha: 1, y: 0, duration: 0.3, stagger: 0.025, clearProps: 'opacity,visibility,transform' }, 0.26)
+      return
+    }
+
+    tl.fromTo('.defect-chart-stack', { scaleY: 0, transformOrigin: 'bottom center' }, { scaleY: 1, duration: 0.72, stagger: 0.025, clearProps: 'transform' }, 0.04)
+    tl.fromTo('.defect-chart-stack span', { autoAlpha: 0, y: 5 }, { autoAlpha: 1, y: 0, duration: 0.28, stagger: 0.01, clearProps: 'opacity,visibility,transform' }, 0.28)
   }, { scope: dashboardRef, dependencies: [screenPage] })
 
+  const screenTitle = ['项目组合里程碑进度与 TQC 看板', '项目信息概览', '未关闭缺陷', '缺陷分布'][screenPage]
+
   return (
-    <main ref={dashboardRef} className={`dashboard theme-${themeMode} ${screenPage === 1 ? 'dashboard-overview' : ''}`}>
+    <main ref={dashboardRef} className={`dashboard theme-${themeMode} ${screenPage === 1 ? 'dashboard-overview' : ''} ${screenPage === 2 ? 'dashboard-defects' : ''} ${screenPage === 3 ? 'dashboard-defect-distribution' : ''}`}>
       <Header
         now={now}
-        title={screenPage === 0 ? '项目组合里程碑进度与 TQC 看板' : '项目信息概览'}
+        title={screenTitle}
+        activeScreen={screenPage}
         onSelectScreen={setScreenPage}
       />
 
@@ -223,8 +244,12 @@ export default function Dashboard() {
           timelineMode={timelineMode}
           riskCardIntervalSec={riskCardIntervalSec}
         />
-      ) : (
+      ) : screenPage === 1 ? (
         <OverviewPage />
+      ) : screenPage === 2 ? (
+        <UnclosedDefectsPage />
+      ) : (
+        <DefectDistributionPage />
       )}
 
       <nav className="pagination" aria-label="看板分页">

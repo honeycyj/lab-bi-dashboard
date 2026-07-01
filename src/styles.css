@@ -1950,7 +1950,7 @@ h1 {
   min-width: 0;
   overflow: hidden;
   color: #111318;
-  font-size: clamp(17px, 1.18vw, 25px);
+  font-size: clamp(17px, 1.18vw, 21px);
   font-weight: var(--weight-regular);
   line-height: 1.25;
   text-overflow: ellipsis;

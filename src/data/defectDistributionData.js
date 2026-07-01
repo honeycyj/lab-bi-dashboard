@@ -1,12 +1,14 @@
+import { defectStatusColors } from './defectStatusPalette'
+
 export const projectDeveloperStatuses = [
-  { key: 'failed', label: '未通过', color: '#ff9f2f' },
-  { key: 'suspended', label: '挂起', color: '#ffd43b' },
-  { key: 'open', label: '打开', color: '#17a773' },
+  { key: 'failed', label: '未通过', color: defectStatusColors.failed },
+  { key: 'suspended', label: '挂起', color: defectStatusColors.suspended },
+  { key: 'open', label: '打开', color: defectStatusColors.open },
 ]
 
 export const projectTesterStatuses = [
-  { key: 'passed', label: '已通过', color: '#ffd43b' },
-  { key: 'resolved', label: '已解决', color: '#17a773' },
+  { key: 'passed', label: '已通过', color: defectStatusColors.passed },
+  { key: 'resolved', label: '已解决', color: defectStatusColors.resolved },
 ]
 
 export const severeStatuses = [

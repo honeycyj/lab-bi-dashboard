@@ -6,8 +6,11 @@ import {
   defectStateData,
   trendData,
 } from '../data/dashboardData'
+import { defectStatusPalette } from '../data/defectStatusPalette'
 import { dashboardProjects } from '../data/realProjectData'
 import { departmentBreakdownFromProjects, overviewStatsFromProjects } from '../data/projectMetrics'
+
+const defectLevelPalette = ['#8e96a3', '#36a9f4', '#ffbd2e', '#ff6678']
 
 function OverviewStatCard({ item }) {
   return (
@@ -67,8 +70,10 @@ function DonutCard({ title, data, variant = 'default' }) {
   const total = data.reduce((sum, item) => sum + item[1], 0)
   let cursor = 0
   const colors = variant === 'status'
-    ? ['#b479f0', '#7c2cf4', '#ffbd2e', '#ff6678', '#a77bf3', '#28c840', '#0e0e1e']
-    : ['#7c2cf4', '#b479f0', '#a77bf3', '#ffbd2e', '#28c840', '#ff6678']
+    ? defectStatusPalette
+    : variant === 'level'
+      ? defectLevelPalette
+      : ['#7c2cf4', '#b479f0', '#a77bf3', '#ffbd2e', '#28c840', '#ff6678']
   const gradient = data.map((item, index) => {
     const start = cursor
     cursor += (item[1] / total) * 100
@@ -163,7 +168,7 @@ export default function OverviewPage() {
       </div>
 
       <div className="overview-main">
-        <DonutCard title="TQC 项目结构" data={defectLevelData} />
+        <DonutCard title="TQC 项目结构" data={defectLevelData} variant="level" />
         <TrendChart />
       </div>
 

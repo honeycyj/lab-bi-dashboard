@@ -1,10 +1,12 @@
+import { defectStatusColors } from './defectStatusPalette'
+
 export const defectStatusMeta = {
-  open: { label: '打开', color: '#33a6f2' },
-  suspended: { label: '挂起', color: '#64c842' },
-  failed: { label: '未通过', color: '#ffb13b' },
-  resolved: { label: '已解决', color: '#33a6f2' },
-  passed: { label: '已通过', color: '#64c842' },
-  rejected: { label: '驳回', color: '#ffb13b' },
+  open: { label: '打开', color: defectStatusColors.open },
+  suspended: { label: '挂起', color: defectStatusColors.suspended },
+  failed: { label: '未通过', color: defectStatusColors.failed },
+  resolved: { label: '已解决', color: defectStatusColors.resolved },
+  passed: { label: '已通过', color: defectStatusColors.passed },
+  rejected: { label: '驳回', color: defectStatusColors.failed },
 }
 
 export const developerDefects = [

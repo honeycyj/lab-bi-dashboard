@@ -1,6 +1,8 @@
+import { defectStatusColors } from './defectStatusPalette'
+
 export const productSeverityStatuses = [
-  { key: 'critical', label: '致命', color: '#73d34a' },
-  { key: 'severe', label: '严重', color: '#55b8f3' },
+  { key: 'critical', label: '致命', color: '#ff6678' },
+  { key: 'severe', label: '严重', color: '#ffbd2e' },
 ]
 
 export const productSeverityProjects = [
@@ -12,9 +14,9 @@ export const productSeverityProjects = [
 
 export const productStatusStatuses = [
   { key: 'testing', label: '测试中', color: '#a896ff' },
-  { key: 'open', label: '打开', color: '#ff8f86' },
-  { key: 'resolved', label: '已解决', color: '#ffde6a' },
-  { key: 'fixing', label: '修复中', color: '#765ee8' },
+  { key: 'open', label: '打开', color: defectStatusColors.open },
+  { key: 'resolved', label: '已解决', color: defectStatusColors.resolved },
+  { key: 'fixing', label: '修复中', color: defectStatusColors.fixing },
 ]
 
 export const productStatusProjects = [

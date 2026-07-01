@@ -16,8 +16,21 @@ export default function SettingsPanel({
   setThemeMode,
   timelineMode,
   setTimelineMode,
+  navItems,
+  visibleScreens,
+  setVisibleScreens,
 }) {
   if (!open) return null
+
+  const visibleSet = new Set(visibleScreens)
+  const toggleScreen = (screen) => {
+    if (visibleSet.has(screen) && visibleScreens.length <= 1) return
+    setVisibleScreens(
+      visibleSet.has(screen)
+        ? visibleScreens.filter((item) => item !== screen)
+        : [...visibleScreens, screen].sort((left, right) => left - right),
+    )
+  }
 
   return (
     <div className="settings-layer" role="dialog" aria-modal="true" aria-label="看板设置">
@@ -124,6 +137,26 @@ export default function SettingsPanel({
             >
               阶段里程碑
             </button>
+          </div>
+        </div>
+
+        <div className="settings-filter">
+          <div>
+            <span>显示栏目</span>
+            <small>控制顶部标签、底部分页和自动轮播范围</small>
+          </div>
+          <div className="settings-filter-grid">
+            {navItems.map((item) => (
+              <label key={item.screen} className="settings-check">
+                <input
+                  type="checkbox"
+                  checked={visibleSet.has(item.screen)}
+                  disabled={visibleSet.has(item.screen) && visibleScreens.length <= 1}
+                  onChange={() => toggleScreen(item.screen)}
+                />
+                <span>{item.label}</span>
+              </label>
+            ))}
           </div>
         </div>
 

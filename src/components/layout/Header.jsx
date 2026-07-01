@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react'
-import { NAV_ITEMS } from '../../app/constants'
 
 const changshaWeatherUrl = 'https://api.open-meteo.com/v1/forecast?latitude=28.2282&longitude=112.9388&current=temperature_2m,weather_code&timezone=Asia%2FShanghai'
 
@@ -14,9 +13,8 @@ const weatherLabelFromCode = (code) => {
   return '天气'
 }
 
-export default function Header({ now, title, activeScreen, onSelectScreen }) {
+export default function Header({ now, title, activeScreen, onSelectScreen, navItems }) {
   const [weather, setWeather] = useState(null)
-  const navItems = NAV_ITEMS
   const activeNav = navItems.find((item) => item.screen === activeScreen)?.label
   const dateText = new Intl.DateTimeFormat('zh-CN', {
     year: 'numeric',
@@ -72,7 +70,7 @@ export default function Header({ now, title, activeScreen, onSelectScreen }) {
         <img src="/logotext.png" alt="马栏山音视频实验室" />
         <h1>BI 项目数据看板</h1>
       </div>
-      <nav className="header-tabs" aria-label="看板栏目">
+      <nav className="header-tabs" aria-label="看板栏目" style={{ '--header-tab-count': navItems.length }}>
         {navItems.map((item) => (
           <button
             type="button"

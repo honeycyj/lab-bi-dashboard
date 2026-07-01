@@ -36,9 +36,8 @@ function StatusLegend({ statusKeys }) {
 function StackedRankingCard({ title, subtitle, data, statusKeys, limit, columns = 1 }) {
   const visibleData = useMemo(() => (
     [...data]
-      .sort((left, right) => totalOf(right, statusKeys) - totalOf(left, statusKeys))
       .slice(0, limit)
-  ), [data, limit, statusKeys])
+  ), [data, limit])
   const columnSize = Math.ceil(visibleData.length / columns)
   const cardMax = Math.max(...visibleData.map((item) => totalOf(item, statusKeys)), 1)
   const columnItems = useMemo(() => {
@@ -46,7 +45,7 @@ function StackedRankingCard({ title, subtitle, data, statusKeys, limit, columns 
   }, [columnSize, columns, visibleData])
 
   return (
-    <article className={`overview-card defect-card defect-ranking-card defect-ranking-card-${columns}col`}>
+    <article className={`overview-card defect-card defect-ranking-card defect-ranking-card-${columns}col defect-ranking-card-no-order`}>
       <div className="overview-card-head">
         <span>{title}</span>
         <small>{subtitle}</small>
@@ -55,17 +54,12 @@ function StackedRankingCard({ title, subtitle, data, statusKeys, limit, columns 
         {columnItems.map((items, columnIndex) => {
           return (
             <div className="defect-rank-list" key={columnIndex}>
-              <div className="defect-rank-column-head">
-                <span>Top {columnIndex * columnSize + 1}-{columnIndex * columnSize + items.length}</span>
-              </div>
               {items.map((item, itemIndex) => {
-                const rank = columnIndex * columnSize + itemIndex + 1
                 const total = totalOf(item, statusKeys)
                 const activeStatusCount = statusKeys.filter((key) => item[key]).length
                 return (
                   <div className="defect-rank-row" key={`${item.name}-${item.code}`}>
                     <div className="defect-person">
-                      <b>{rank}</b>
                       <span>{item.name}</span>
                       <em>{item.code}</em>
                     </div>
@@ -119,7 +113,7 @@ export default function UnclosedDefectsPage() {
       <div className="defect-main-grid">
         <StackedRankingCard
           title="未关闭缺陷分布（按研发人员）"
-          subtitle="Top 20 · 打开 / 挂起 / 未通过"
+          subtitle="打开 / 挂起 / 未通过"
           data={developerDefects}
           statusKeys={developerStatusKeys}
           limit={20}

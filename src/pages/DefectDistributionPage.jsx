@@ -82,9 +82,46 @@ function StackedColumnChart({ title, subtitle, data, statuses, maxTicks = 5 }) {
   )
 }
 
+function SevereRankingChart({ title, subtitle, data, statuses }) {
+  const sortedData = useMemo(() => (
+    [...data].sort((left, right) => totalOf(right, statuses) - totalOf(left, statuses))
+  ), [data, statuses])
+  const maxValue = Math.max(...sortedData.map((item) => totalOf(item, statuses)), 1)
+
+  return (
+    <article className="overview-card defect-chart-card severe-ranking-card">
+      <div className="overview-card-head">
+        <span>{title}</span>
+        <small>{subtitle}</small>
+      </div>
+      <div className="severe-card-grid">
+        {sortedData.map((item, index) => {
+          const total = totalOf(item, statuses)
+          return (
+            <div
+              className="severe-person-card"
+              key={item.name}
+              style={{
+                '--severe-bar-width': `${Math.max(3, (total / maxValue) * 100)}%`,
+              }}
+            >
+              <b title={item.name}>{item.name}</b>
+              <strong>{total}</strong>
+              <div className="severe-person-card-track">
+                <i />
+                <span />
+              </div>
+            </div>
+          )
+        })}
+      </div>
+    </article>
+  )
+}
+
 export default function DefectDistributionPage() {
   return (
-    <section className="defect-distribution-page">
+    <section className="defect-distribution-page defect-distribution-page-open">
       <StackedColumnChart
         title="未关闭缺陷分布（按项目、研发）"
         subtitle="打开 / 挂起 / 未通过"
@@ -97,13 +134,20 @@ export default function DefectDistributionPage() {
         data={projectTesterDefects}
         statuses={projectTesterStatuses}
       />
-      <StackedColumnChart
+    </section>
+  )
+}
+
+export function SevereDefectDistributionPage() {
+  return (
+    <section className="defect-distribution-page defect-distribution-page-severe">
+      <SevereRankingChart
         title="未解决致命、严重缺陷分布（按人员）"
         subtitle="严重"
         data={severePersonDefects}
         statuses={severeStatuses}
       />
-      <StackedColumnChart
+      <SevereRankingChart
         title="未解决致命、严重缺陷分布（按项目）"
         subtitle="严重"
         data={severeProjectDefects}

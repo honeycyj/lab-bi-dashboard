@@ -3,10 +3,10 @@ import gsap from 'gsap'
 import { useGSAP } from '@gsap/react'
 import { Settings } from 'lucide-react'
 import {
+  NAV_ITEMS,
   PAGE_INTERVAL,
   RISK_CARD_INTERVAL,
   PAGE_SIZE,
-  SCREEN_COUNT,
   SCREEN_INTERVAL,
   TIMER_TICK,
 } from './constants'
@@ -17,10 +17,44 @@ import { createProjectNodePageModel } from '../data/projectModel'
 import OverviewPage from '../pages/OverviewPage'
 import ProjectNodesPage from '../pages/ProjectNodesPage'
 import UnclosedDefectsPage from '../pages/UnclosedDefectsPage'
-import DefectDistributionPage from '../pages/DefectDistributionPage'
+import DefectDistributionPage, { SevereDefectDistributionPage } from '../pages/DefectDistributionPage'
+import ProductInnovationPage from '../pages/ProductInnovationPage'
+import SalesDashboardPage from '../pages/SalesDashboardPage'
 import { prefersReducedMotion, secondsUntil } from '../utils/time'
 
 gsap.registerPlugin(useGSAP)
+
+const pageQueryMap = {
+  sales: 6,
+  'product-innovation': 5,
+  'severe-distribution': 4,
+  distribution: 3,
+  defects: 2,
+  overview: 1,
+}
+
+const defaultVisibleScreens = NAV_ITEMS.map((item) => item.screen)
+
+const parseVisibleScreens = () => {
+  if (typeof window === 'undefined') return defaultVisibleScreens
+
+  const stored = window.localStorage.getItem('visibleScreens')
+  if (!stored) return defaultVisibleScreens
+
+  const knownScreens = new Set(defaultVisibleScreens)
+  const parsed = stored
+    .split(',')
+    .map((item) => Number(item))
+    .filter((item) => knownScreens.has(item))
+
+  return parsed.length ? parsed : defaultVisibleScreens
+}
+
+const nextVisibleScreen = (currentScreen, visibleScreens) => {
+  const currentIndex = visibleScreens.indexOf(currentScreen)
+  if (currentIndex < 0) return visibleScreens[0]
+  return visibleScreens[(currentIndex + 1) % visibleScreens.length]
+}
 
 export default function Dashboard() {
   const dashboardRef = useRef(null)
@@ -30,19 +64,18 @@ export default function Dashboard() {
   const [screenPage, setScreenPage] = useState(() => {
     if (typeof window === 'undefined') return 0
     const page = new URLSearchParams(window.location.search).get('page')
-    if (page === 'distribution') return 3
-    if (page === 'defects') return 2
-    return page === 'overview' ? 1 : 0
+    return pageQueryMap[page] ?? 0
   })
+  const [visibleScreens, setVisibleScreens] = useState(parseVisibleScreens)
   const [autoPlay, setAutoPlay] = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [projectIntervalSec, setProjectIntervalSec] = useState(PAGE_INTERVAL / 1000)
   const [screenIntervalSec, setScreenIntervalSec] = useState(SCREEN_INTERVAL / 1000)
   const [riskCardIntervalSec, setRiskCardIntervalSec] = useState(RISK_CARD_INTERVAL / 1000)
   const [themeMode, setThemeMode] = useState(() => (
-    typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('theme') === 'dark'
-      ? 'dark'
-      : 'light'
+    typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('theme') === 'light'
+      ? 'light'
+      : 'dark'
   ))
   const [timelineMode, setTimelineMode] = useState(() => (
     (() => {
@@ -62,11 +95,27 @@ export default function Dashboard() {
     [currentPage],
   )
   const totalPages = nodePageModel.totalPages
+  const visibleNavItems = useMemo(
+    () => NAV_ITEMS.filter((item) => visibleScreens.includes(item.screen)),
+    [visibleScreens],
+  )
+  const visibleScreenIndex = Math.max(0, visibleScreens.indexOf(screenPage))
 
   useEffect(() => {
     const clockTimer = window.setInterval(() => setNow(new Date()), 1000)
     return () => window.clearInterval(clockTimer)
   }, [])
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    window.localStorage.setItem('visibleScreens', visibleScreens.join(','))
+  }, [visibleScreens])
+
+  useEffect(() => {
+    if (visibleScreens.includes(screenPage)) return
+    setCurrentPage(0)
+    setScreenPage(visibleScreens[0] ?? 0)
+  }, [screenPage, visibleScreens])
 
   useEffect(() => {
     if (!autoPlay || settingsOpen || screenPage === 0) return undefined
@@ -79,14 +128,14 @@ export default function Dashboard() {
       setScreenCountdownSec(remaining)
       if (remaining <= 0) {
         setCurrentPage(0)
-        setScreenPage((page) => (page >= SCREEN_COUNT - 1 ? 0 : page + 1))
+        setScreenPage((page) => nextVisibleScreen(page, visibleScreens))
         deadline = Date.now() + intervalMs
         setScreenCountdownSec(secondsUntil(deadline))
       }
     }, TIMER_TICK)
 
     return () => window.clearInterval(screenTimer)
-  }, [autoPlay, screenIntervalSec, screenPage, settingsOpen])
+  }, [autoPlay, screenIntervalSec, screenPage, settingsOpen, visibleScreens])
 
   useEffect(() => {
     if (!autoPlay || settingsOpen || screenPage !== 0) return undefined
@@ -100,7 +149,7 @@ export default function Dashboard() {
       if (remaining <= 0) {
         setCurrentPage((page) => {
           if (page >= totalPages - 1) {
-            setScreenPage(1)
+            setScreenPage(nextVisibleScreen(0, visibleScreens))
             return 0
           }
 
@@ -112,7 +161,7 @@ export default function Dashboard() {
     }, TIMER_TICK)
 
     return () => window.clearInterval(pageTimer)
-  }, [autoPlay, projectIntervalSec, screenPage, settingsOpen, totalPages])
+  }, [autoPlay, projectIntervalSec, screenPage, settingsOpen, totalPages, visibleScreens])
 
   useEffect(() => {
     if (!autoPlay || settingsOpen) return
@@ -130,7 +179,7 @@ export default function Dashboard() {
 
     const sectionTargets = screenPage === 0
       ? ['.metrics', '.project-board']
-      : [screenPage === 1 ? '.overview-page' : screenPage === 2 ? '.unclosed-defects-page' : '.defect-distribution-page']
+      : [screenPage === 1 ? '.overview-page' : screenPage === 2 ? '.unclosed-defects-page' : screenPage === 6 ? '.sales-dashboard-page' : '.defect-distribution-page']
     const itemTargets = screenPage === 0 ? '.metric-card, .project-row' : '.overview-stat, .overview-card'
     const tl = gsap.timeline({ defaults: { ease: 'power3.out' } })
 
@@ -198,7 +247,7 @@ export default function Dashboard() {
   }, { scope: dashboardRef, dependencies: [currentPage] })
 
   useGSAP(() => {
-    if (![1, 2, 3].includes(screenPage) || prefersReducedMotion()) return
+    if (![1, 2, 3, 4, 5, 6].includes(screenPage) || prefersReducedMotion()) return
 
     const tl = gsap.timeline({ delay: 0.08, defaults: { ease: 'power3.out' } })
     if (screenPage === 1) {
@@ -220,19 +269,32 @@ export default function Dashboard() {
       return
     }
 
+    if (screenPage === 4) {
+      tl.fromTo('.severe-person-card', { autoAlpha: 0, y: 10 }, { autoAlpha: 1, y: 0, duration: 0.34, stagger: 0.035, clearProps: 'opacity,visibility,transform' }, 0.02)
+      tl.fromTo('.severe-person-card-track i', { scaleX: 0, transformOrigin: 'left center' }, { scaleX: 1, duration: 0.56, stagger: 0.035, clearProps: 'transform' }, 0.18)
+      return
+    }
+
+    if (screenPage === 6) {
+      tl.fromTo('.sales-metric-track i', { scaleX: 0, transformOrigin: 'left center' }, { scaleX: 1, duration: 0.64, stagger: 0.035, clearProps: 'transform' }, 0.04)
+      tl.fromTo('.sales-matrix-row, .sales-metric-row .dept-row-head b', { autoAlpha: 0, y: 5 }, { autoAlpha: 1, y: 0, duration: 0.28, stagger: 0.018, clearProps: 'opacity,visibility,transform' }, 0.22)
+      return
+    }
+
     tl.fromTo('.defect-chart-stack', { scaleY: 0, transformOrigin: 'bottom center' }, { scaleY: 1, duration: 0.72, stagger: 0.025, clearProps: 'transform' }, 0.04)
     tl.fromTo('.defect-chart-stack span', { autoAlpha: 0, y: 5 }, { autoAlpha: 1, y: 0, duration: 0.28, stagger: 0.01, clearProps: 'opacity,visibility,transform' }, 0.28)
   }, { scope: dashboardRef, dependencies: [screenPage] })
 
-  const screenTitle = ['项目组合里程碑进度与 TQC 看板', '项目信息概览', '未关闭缺陷', '缺陷分布'][screenPage]
+  const screenTitle = ['项目组合里程碑进度与 TQC 看板', '项目信息概览', '未关闭缺陷', '缺陷分布', '严重缺陷分布', '产品创新部', '销售大屏'][screenPage]
 
   return (
-    <main ref={dashboardRef} className={`dashboard theme-${themeMode} ${screenPage === 1 ? 'dashboard-overview' : ''} ${screenPage === 2 ? 'dashboard-defects' : ''} ${screenPage === 3 ? 'dashboard-defect-distribution' : ''}`}>
+    <main ref={dashboardRef} className={`dashboard theme-${themeMode} ${screenPage === 1 ? 'dashboard-overview' : ''} ${screenPage === 2 ? 'dashboard-defects' : ''} ${screenPage === 3 || screenPage === 4 || screenPage === 5 ? 'dashboard-defect-distribution' : ''} ${screenPage === 6 ? 'dashboard-sales' : ''}`}>
       <Header
         now={now}
         title={screenTitle}
         activeScreen={screenPage}
         onSelectScreen={setScreenPage}
+        navItems={visibleNavItems}
       />
 
       {screenPage === 0 ? (
@@ -248,23 +310,29 @@ export default function Dashboard() {
         <OverviewPage />
       ) : screenPage === 2 ? (
         <UnclosedDefectsPage />
-      ) : (
+      ) : screenPage === 3 ? (
         <DefectDistributionPage />
+      ) : screenPage === 4 ? (
+        <SevereDefectDistributionPage />
+      ) : screenPage === 5 ? (
+        <ProductInnovationPage />
+      ) : (
+        <SalesDashboardPage />
       )}
 
       <nav className="pagination" aria-label="看板分页">
         <span className="page-count">
-          第 {screenPage === 0 ? currentPage + 1 : screenPage + 1} / {screenPage === 0 ? totalPages : SCREEN_COUNT} 页
+          第 {screenPage === 0 ? currentPage + 1 : visibleScreenIndex + 1} / {screenPage === 0 ? totalPages : visibleScreens.length} 页
         </span>
         <div className="page-dots">
-          {Array.from({ length: SCREEN_COUNT }, (_, index) => (
+          {visibleScreens.map((screen, index) => (
             <button
               type="button"
-              className={index === screenPage ? 'active' : ''}
+              className={screen === screenPage ? 'active' : ''}
               aria-label={`切换到看板第 ${index + 1} 页`}
-              aria-current={index === screenPage ? 'page' : undefined}
-              onClick={() => setScreenPage(index)}
-              key={index}
+              aria-current={screen === screenPage ? 'page' : undefined}
+              onClick={() => setScreenPage(screen)}
+              key={screen}
             />
           ))}
         </div>
@@ -303,6 +371,9 @@ export default function Dashboard() {
         setThemeMode={setThemeMode}
         timelineMode={timelineMode}
         setTimelineMode={setTimelineMode}
+        navItems={NAV_ITEMS}
+        visibleScreens={visibleScreens}
+        setVisibleScreens={setVisibleScreens}
       />
     </main>
   )

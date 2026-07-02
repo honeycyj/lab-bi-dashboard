@@ -148,7 +148,7 @@ h1 {
   display: grid;
   grid-template-columns: clamp(320px, 22vw, 480px) minmax(0, 1fr);
   gap: 8px;
-  padding-bottom: 3.4vh;
+  padding-bottom: 2.2vh;
   overflow: hidden;
 }
 
@@ -733,14 +733,14 @@ h1 {
   right: 0;
   bottom: 0;
   z-index: 20;
-  height: 3.4vh;
+  height: 2.2vh;
   display: flex;
   align-items: center;
   justify-content: center;
   border-top: 0;
   background: transparent;
-  color: #4f5258;
-  font-size: .56vw;
+  color: rgba(79, 82, 88, .66);
+  font-size: var(--font-caption);
   pointer-events: none;
 }
 
@@ -751,32 +751,32 @@ h1 {
   transform: translateY(-50%);
 }
 
-.page-count { left: .8vw; }
-.page-timer { right: .8vw; }
+.page-count { left: .62vw; }
+.page-timer { right: .62vw; }
 
 .page-dots {
   display: flex;
   align-items: center;
-  gap: .45vw;
+  gap: .32vw;
   pointer-events: auto;
 }
 
 .page-dots button {
-  width: .46vw;
-  height: .46vw;
-  min-width: 8px;
-  min-height: 8px;
+  width: .32vw;
+  height: .32vw;
+  min-width: 5px;
+  min-height: 5px;
   padding: 0;
   border: 0;
   border-radius: 1px;
-  background: #a5a7ad;
+  background: rgba(165, 167, 173, .56);
   cursor: pointer;
   transition: width .25s ease, background-color .25s ease;
 }
 
 .page-dots button.active {
-  width: 1.35vw;
-  background: #7c2cf4;
+  width: .96vw;
+  background: rgba(124, 44, 244, .88);
 }
 
 .page-dots button:focus-visible {
@@ -787,7 +787,7 @@ h1 {
 .settings-button {
   position: fixed;
   right: 1vw;
-  bottom: calc(3.4vh + 12px);
+  bottom: calc(2.2vh + 10px);
   z-index: 28;
   width: 36px;
   height: 36px;
@@ -815,7 +815,7 @@ h1 {
   display: flex;
   align-items: flex-end;
   justify-content: flex-end;
-  padding: 0 1vw calc(3.4vh + 24px);
+  padding: 0 1vw calc(2.2vh + 22px);
 }
 
 .settings-backdrop {
@@ -1189,7 +1189,7 @@ h1 {
 .theme-dark .pagination {
   border-top-color: transparent;
   background: transparent;
-  color: #b8bdca;
+  color: rgba(184, 189, 202, .58);
 }
 
 .theme-dark .settings-button {
@@ -1246,7 +1246,7 @@ h1 {
   display: grid;
   grid-template-rows: 11.4vh 30vh minmax(0, 1fr);
   gap: 8px;
-  padding-bottom: 3.4vh;
+  padding-bottom: 2.2vh;
 }
 
 .unclosed-defects-page {
@@ -1254,7 +1254,7 @@ h1 {
   display: grid;
   grid-template-rows: 11.4vh minmax(0, 1fr);
   gap: 8px;
-  padding-bottom: 3.4vh;
+  padding-bottom: 2.2vh;
 }
 
 .defect-distribution-page {
@@ -1262,7 +1262,7 @@ h1 {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 8px;
-  padding-bottom: 3.4vh;
+  padding-bottom: 2.2vh;
 }
 
 .defect-distribution-page-open,
@@ -1856,10 +1856,10 @@ h1 {
   flex: 1;
   display: grid;
   grid-template-columns: repeat(6, minmax(0, 1fr));
-  grid-auto-rows: clamp(92px, 10.2vh, 128px);
+  grid-auto-rows: clamp(112px, 11.8vh, 146px);
   align-content: start;
-  gap: clamp(10px, .9vh, 14px);
-  padding: max(14px, 1.15vh) max(16px, 1vw) max(16px, 1.25vh);
+  gap: clamp(12px, 1.08vh, 18px);
+  padding: clamp(18px, 1.72vh, 28px) clamp(22px, 1.36vw, 34px) clamp(18px, 1.72vh, 28px);
 }
 
 .product-new-severe-mini-card {
@@ -1867,8 +1867,8 @@ h1 {
   display: grid;
   grid-template-columns: 1fr 1fr;
   grid-template-rows: auto minmax(0, 1fr) auto;
-  gap: clamp(6px, .62vh, 10px) .72vw;
-  padding: clamp(12px, 1.05vh, 18px) clamp(12px, .9vw, 18px);
+  gap: clamp(7px, .74vh, 12px) .76vw;
+  padding: clamp(14px, 1.22vh, 20px) clamp(16px, 1.02vw, 24px);
   border: 1px solid rgba(224, 226, 232, .7);
   background: rgba(255, 255, 255, .42);
 }
@@ -1890,7 +1890,7 @@ h1 {
   align-self: center;
   color: #202124;
   font-family: var(--number-font);
-  font-size: clamp(28px, 1.9vw, 42px);
+  font-size: clamp(30px, 1.7vw, 40px);
   font-weight: var(--weight-regular);
   line-height: .9;
 }
@@ -1900,8 +1900,8 @@ h1 {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
-  gap: .42vw;
-  padding-top: clamp(5px, .48vh, 8px);
+  gap: .5vw;
+  padding-top: clamp(7px, .62vh, 10px);
   border-top: 1px solid rgba(224, 226, 232, .72);
 }
 
@@ -1928,19 +1928,19 @@ h1 {
   flex: 1;
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  grid-auto-rows: clamp(112px, 13vh, 148px);
+  grid-auto-rows: clamp(98px, 10.8vh, 124px);
   align-content: start;
-  gap: clamp(10px, 1vh, 16px);
-  padding: clamp(14px, 1.35vh, 22px) clamp(18px, 1.5vw, 30px) clamp(18px, 1.6vh, 28px);
+  gap: clamp(12px, 1.12vh, 18px) clamp(12px, .86vw, 20px);
+  padding: clamp(14px, 1.32vh, 22px) clamp(18px, 1.28vw, 28px) clamp(16px, 1.42vh, 24px);
 }
 
 .severe-person-card {
   min-width: 0;
   min-height: 0;
   display: grid;
-  grid-template-rows: auto minmax(0, 1fr) clamp(22px, 2.45vh, 32px);
-  gap: clamp(6px, .7vh, 10px);
-  padding: clamp(14px, 1.25vh, 20px) clamp(18px, 1.45vw, 28px) 0;
+  grid-template-rows: auto minmax(0, 1fr) clamp(18px, 1.92vh, 24px);
+  gap: clamp(5px, .52vh, 8px);
+  padding: clamp(12px, 1.05vh, 18px) clamp(18px, 1.28vw, 26px) 0;
   border: 1px solid rgba(31, 35, 40, .12);
   background: #fff;
 }
@@ -1959,7 +1959,7 @@ h1 {
 
 .severe-person-card-track {
   grid-row: 3;
-  margin: 0 calc(clamp(18px, 1.45vw, 28px) * -1);
+  margin: 0 calc(clamp(18px, 1.28vw, 26px) * -1);
   min-width: 0;
   height: 100%;
   display: flex;
@@ -2062,7 +2062,7 @@ h1 {
   display: grid;
   grid-template-rows: 11.4vh minmax(0, 1fr);
   gap: 8px;
-  padding-bottom: 3.4vh;
+  padding-bottom: 2.2vh;
 }
 
 .sales-stats {
@@ -2795,11 +2795,11 @@ h1 {
 }
 
 .theme-dark .page-dots button {
-  background: #777d8c;
+  background: rgba(119, 125, 140, .52);
 }
 
 .theme-dark .page-dots button.active {
-  background: #8e48ff;
+  background: rgba(142, 72, 255, .9);
 }
 
 @media (max-width: 1280px) {

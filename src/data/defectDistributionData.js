@@ -48,3 +48,33 @@ export const severeProjectDefects = [
   { name: '青彩声家庭解决方案项目', severe: 1 },
   { name: '技术研究部音频维护项目', severe: 1 },
 ]
+
+export const defectDistributionPageCharts = [
+  {
+    title: '未关闭缺陷分布（按项目、研发）',
+    subtitle: '打开 / 挂起 / 未通过',
+    data: projectDeveloperDefects,
+    statuses: projectDeveloperStatuses,
+  },
+  {
+    title: '未关闭缺陷分布（按项目、测试）',
+    subtitle: '已解决 / 已通过',
+    data: projectTesterDefects,
+    statuses: projectTesterStatuses,
+  },
+]
+
+export const severeDefectDistributionPageCharts = [
+  {
+    title: '未解决致命、严重缺陷分布（按人员）',
+    subtitle: '严重',
+    data: severePersonDefects,
+    statuses: severeStatuses,
+  },
+  {
+    title: '未解决致命、严重缺陷分布（按项目）',
+    subtitle: '严重',
+    data: severeProjectDefects,
+    statuses: severeStatuses,
+  },
+]

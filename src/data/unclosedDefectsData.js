@@ -41,3 +41,40 @@ export const testerDefects = [
 
 export const developerStatusKeys = ['open', 'suspended', 'failed']
 export const testerStatusKeys = ['resolved', 'passed', 'rejected']
+
+const totalOf = (item, keys) => keys.reduce((sum, key) => sum + (item[key] || 0), 0)
+
+const developerTotal = developerDefects.reduce((sum, item) => sum + totalOf(item, developerStatusKeys), 0)
+const testerTotal = testerDefects.reduce((sum, item) => sum + totalOf(item, testerStatusKeys), 0)
+
+export const unclosedDefectsPageData = {
+  stats: [
+    { label: '未关闭缺陷总数', value: developerTotal + testerTotal, tone: 'purple', note: '按截图口径汇总' },
+    { label: '研发人员视角', value: developerTotal, tone: 'green', note: `${developerDefects.length} 位执行者` },
+    { label: '测试人员视角', value: testerTotal, tone: 'amber', note: `${testerDefects.length} 位执行者` },
+    {
+      label: '状态类型数',
+      value: developerStatusKeys.length + testerStatusKeys.length,
+      tone: 'red',
+      note: '两张图例合计',
+    },
+  ],
+  rankings: [
+    {
+      title: '未关闭缺陷分布（按研发人员）',
+      subtitle: '打开 / 挂起 / 未通过',
+      data: developerDefects,
+      statusKeys: developerStatusKeys,
+      limit: 20,
+      columns: 2,
+    },
+    {
+      title: '未关闭缺陷分布（按测试人员）',
+      subtitle: '已解决 / 已通过 / 驳回',
+      data: testerDefects,
+      statusKeys: testerStatusKeys,
+      limit: 8,
+      columns: 1,
+    },
+  ],
+}

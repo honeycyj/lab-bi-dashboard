@@ -29,3 +29,25 @@ export const productStatusProjects = [
 export const productNewSevereDefects = [
   { project: 'M项目-IPD项目', critical: 0, severe: 1 },
 ]
+
+export const productInnovationPageData = {
+  charts: [
+    {
+      title: '致命/严重缺陷遗留数量（未关闭）',
+      department: '产品创新部',
+      data: productSeverityProjects,
+      statuses: productSeverityStatuses,
+    },
+    {
+      title: '致命/严重缺陷遗留状态分布',
+      department: '产品创新部',
+      data: productStatusProjects,
+      statuses: productStatusStatuses,
+    },
+  ],
+  newSevere: {
+    title: '上周新增致命/严重缺陷',
+    subtitle: '新增明细',
+    rows: productNewSevereDefects,
+  },
+}

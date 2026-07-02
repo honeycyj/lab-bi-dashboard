@@ -1,10 +1,7 @@
 import React, { useMemo } from 'react'
 import {
-  developerDefects,
-  developerStatusKeys,
   defectStatusMeta,
-  testerDefects,
-  testerStatusKeys,
+  unclosedDefectsPageData,
 } from '../data/unclosedDefectsData'
 
 const totalOf = (item, keys) => keys.reduce((sum, key) => sum + (item[key] || 0), 0)
@@ -97,36 +94,18 @@ function StackedRankingCard({ title, subtitle, data, statusKeys, limit, columns 
 }
 
 export default function UnclosedDefectsPage() {
-  const developerTotal = developerDefects.reduce((sum, item) => sum + totalOf(item, developerStatusKeys), 0)
-  const testerTotal = testerDefects.reduce((sum, item) => sum + totalOf(item, testerStatusKeys), 0)
-  const statusTypeTotal = developerStatusKeys.length + testerStatusKeys.length
-
   return (
     <section className="unclosed-defects-page">
       <div className="overview-stats defect-stats">
-        <DefectStatCard label="未关闭缺陷总数" value={developerTotal + testerTotal} note="按截图口径汇总" />
-        <DefectStatCard label="研发人员视角" value={developerTotal} tone="green" note={`${developerDefects.length} 位执行者`} />
-        <DefectStatCard label="测试人员视角" value={testerTotal} tone="amber" note={`${testerDefects.length} 位执行者`} />
-        <DefectStatCard label="状态类型数" value={statusTypeTotal} tone="red" note="两张图例合计" />
+        {unclosedDefectsPageData.stats.map((item) => (
+          <DefectStatCard {...item} key={item.label} />
+        ))}
       </div>
 
       <div className="defect-main-grid">
-        <StackedRankingCard
-          title="未关闭缺陷分布（按研发人员）"
-          subtitle="打开 / 挂起 / 未通过"
-          data={developerDefects}
-          statusKeys={developerStatusKeys}
-          limit={20}
-          columns={2}
-        />
-        <StackedRankingCard
-          title="未关闭缺陷分布（按测试人员）"
-          subtitle="已解决 / 已通过 / 驳回"
-          data={testerDefects}
-          statusKeys={testerStatusKeys}
-          limit={8}
-          columns={1}
-        />
+        {unclosedDefectsPageData.rankings.map((card) => (
+          <StackedRankingCard {...card} key={card.title} />
+        ))}
       </div>
     </section>
   )

@@ -1,12 +1,7 @@
 import React, { useMemo } from 'react'
 import {
-  projectDeveloperDefects,
-  projectDeveloperStatuses,
-  projectTesterDefects,
-  projectTesterStatuses,
-  severePersonDefects,
-  severeProjectDefects,
-  severeStatuses,
+  defectDistributionPageCharts,
+  severeDefectDistributionPageCharts,
 } from '../data/defectDistributionData'
 
 const totalOf = (item, statuses) => statuses.reduce((sum, status) => sum + (item[status.key] || 0), 0)
@@ -122,18 +117,9 @@ function SevereRankingChart({ title, subtitle, data, statuses }) {
 export default function DefectDistributionPage() {
   return (
     <section className="defect-distribution-page defect-distribution-page-open">
-      <StackedColumnChart
-        title="未关闭缺陷分布（按项目、研发）"
-        subtitle="打开 / 挂起 / 未通过"
-        data={projectDeveloperDefects}
-        statuses={projectDeveloperStatuses}
-      />
-      <StackedColumnChart
-        title="未关闭缺陷分布（按项目、测试）"
-        subtitle="已解决 / 已通过"
-        data={projectTesterDefects}
-        statuses={projectTesterStatuses}
-      />
+      {defectDistributionPageCharts.map((chart) => (
+        <StackedColumnChart {...chart} key={chart.title} />
+      ))}
     </section>
   )
 }
@@ -141,18 +127,9 @@ export default function DefectDistributionPage() {
 export function SevereDefectDistributionPage() {
   return (
     <section className="defect-distribution-page defect-distribution-page-severe">
-      <SevereRankingChart
-        title="未解决致命、严重缺陷分布（按人员）"
-        subtitle="严重"
-        data={severePersonDefects}
-        statuses={severeStatuses}
-      />
-      <SevereRankingChart
-        title="未解决致命、严重缺陷分布（按项目）"
-        subtitle="严重"
-        data={severeProjectDefects}
-        statuses={severeStatuses}
-      />
+      {severeDefectDistributionPageCharts.map((chart) => (
+        <SevereRankingChart {...chart} key={chart.title} />
+      ))}
     </section>
   )
 }

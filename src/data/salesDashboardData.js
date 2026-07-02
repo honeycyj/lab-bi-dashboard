@@ -9,3 +9,66 @@ export const salesDashboardRows = [
 ]
 
 export const salesDashboardPeriod = '2026/5/1~2026/5/28 18:00（按录入时间）'
+
+export const salesDashboardMetrics = [
+  { key: 'newCustomers', label: '新增客户', tone: 'green', color: '#28c840' },
+  { key: 'customerFollowups', label: '客户跟进记录', tone: 'purple', color: '#7c2cf4' },
+  { key: 'newLeads', label: '新增线索', tone: 'amber', color: '#ffbd2e' },
+  { key: 'leadFollowups', label: '线索跟进记录', tone: 'red', color: '#ff6678' },
+]
+
+export const salesFollowupMetrics = [
+  {
+    label: '客户跟进率',
+    valueKey: 'customerFollowups',
+    maxKey: 'newCustomers',
+    suffix: '%',
+    type: 'rate',
+    color: '#7c2cf4',
+  },
+  {
+    label: '线索跟进率',
+    valueKey: 'leadFollowups',
+    maxKey: 'newLeads',
+    suffix: '%',
+    type: 'rate',
+    color: '#ff6678',
+  },
+  {
+    label: '客户未跟进',
+    valueKey: 'customerFollowups',
+    maxKey: 'newCustomers',
+    suffix: '条',
+    type: 'remaining',
+    color: '#ffbd2e',
+  },
+  {
+    label: '线索未跟进',
+    valueKey: 'leadFollowups',
+    maxKey: 'newLeads',
+    suffix: '条',
+    type: 'remaining',
+    color: '#28c840',
+  },
+]
+
+export const salesDashboardPageData = {
+  period: salesDashboardPeriod,
+  rows: salesDashboardRows,
+  metrics: salesDashboardMetrics,
+  contribution: {
+    title: '销售人员贡献',
+    columns: [
+      { key: 'person', label: '人员' },
+      { key: 'newCustomers', label: '新增客户' },
+      { key: 'customerFollowups', label: '客户跟进' },
+      { key: 'newLeads', label: '新增线索' },
+      { key: 'leadFollowups', label: '线索跟进' },
+    ],
+  },
+  followup: {
+    title: '跟进转化率',
+    subtitle: '与新增客户 / 线索对比',
+    metrics: salesFollowupMetrics,
+  },
+}

@@ -1,15 +1,7 @@
 import React, { useMemo } from 'react'
 import {
-  salesDashboardPeriod,
-  salesDashboardRows,
+  salesDashboardPageData,
 } from '../data/salesDashboardData'
-
-const metricItems = [
-  { key: 'newCustomers', label: '新增客户', tone: 'green', color: '#28c840' },
-  { key: 'customerFollowups', label: '客户跟进记录', tone: 'purple', color: '#7c2cf4' },
-  { key: 'newLeads', label: '新增线索', tone: 'amber', color: '#ffbd2e' },
-  { key: 'leadFollowups', label: '线索跟进记录', tone: 'red', color: '#ff6678' },
-]
 
 function SalesStatCard({ metric, value }) {
   return (
@@ -21,20 +13,18 @@ function SalesStatCard({ metric, value }) {
   )
 }
 
-function SalesPersonCard({ rows }) {
+function SalesPersonCard({ title, period, rows, columns }) {
+  const valueColumns = columns.filter((column) => column.key !== 'person')
+
   return (
     <article className="overview-card sales-overview-card sales-person-card">
       <div className="overview-card-head">
-        <span>销售人员贡献</span>
-        <small>{salesDashboardPeriod}</small>
+        <span>{title}</span>
+        <small>{period}</small>
       </div>
       <div className="sales-matrix">
         <div className="sales-matrix-head">
-          <span>人员</span>
-          <span>新增客户</span>
-          <span>客户跟进</span>
-          <span>新增线索</span>
-          <span>线索跟进</span>
+          {columns.map((column) => <span key={column.key}>{column.label}</span>)}
         </div>
         <div className="sales-matrix-body">
           {rows.map((row) => (
@@ -43,10 +33,7 @@ function SalesPersonCard({ rows }) {
                 <span>{row.name}</span>
                 <em>{row.code}</em>
               </div>
-              <b>{row.newCustomers}</b>
-              <b>{row.customerFollowups}</b>
-              <b>{row.newLeads}</b>
-              <b>{row.leadFollowups}</b>
+              {valueColumns.map((column) => <b key={column.key}>{row[column.key]}</b>)}
             </div>
           ))}
         </div>
@@ -55,25 +42,27 @@ function SalesPersonCard({ rows }) {
   )
 }
 
-function SalesFollowupCard({ totals }) {
-  const newCustomers = totals.find((item) => item.metric.key === 'newCustomers')?.value || 0
-  const customerFollowups = totals.find((item) => item.metric.key === 'customerFollowups')?.value || 0
-  const newLeads = totals.find((item) => item.metric.key === 'newLeads')?.value || 0
-  const leadFollowups = totals.find((item) => item.metric.key === 'leadFollowups')?.value || 0
-  const customerRate = newCustomers ? Math.round((customerFollowups / newCustomers) * 100) : 0
-  const leadRate = newLeads ? Math.round((leadFollowups / newLeads) * 100) : 0
-  const items = [
-    { label: '客户跟进率', value: customerRate, suffix: '%', max: 100, color: '#7c2cf4' },
-    { label: '线索跟进率', value: leadRate, suffix: '%', max: 100, color: '#ff6678' },
-    { label: '客户未跟进', value: Math.max(0, newCustomers - customerFollowups), suffix: '条', max: newCustomers || 1, color: '#ffbd2e' },
-    { label: '线索未跟进', value: Math.max(0, newLeads - leadFollowups), suffix: '条', max: newLeads || 1, color: '#28c840' },
-  ]
+function SalesFollowupCard({ title, subtitle, metrics, totals }) {
+  const valueOf = (key) => totals.find((item) => item.metric.key === key)?.value || 0
+  const items = metrics.map((item) => {
+    const max = valueOf(item.maxKey)
+    const value = valueOf(item.valueKey)
+    const displayValue = item.type === 'rate'
+      ? (max ? Math.round((value / max) * 100) : 0)
+      : Math.max(0, max - value)
+
+    return {
+      ...item,
+      value: displayValue,
+      max: item.type === 'rate' ? 100 : (max || 1),
+    }
+  })
 
   return (
     <article className="overview-card sales-overview-card sales-followup-card">
       <div className="overview-card-head">
-        <span>跟进转化率</span>
-        <small>与新增客户 / 线索对比</small>
+        <span>{title}</span>
+        <small>{subtitle}</small>
       </div>
       <div className="dept-list sales-metric-list">
         {items.map((item) => (
@@ -94,9 +83,9 @@ function SalesFollowupCard({ totals }) {
 
 export default function SalesDashboardPage() {
   const totals = useMemo(() => (
-    metricItems.map((metric) => ({
+    salesDashboardPageData.metrics.map((metric) => ({
       metric,
-      value: salesDashboardRows.reduce((sum, row) => sum + row[metric.key], 0),
+      value: salesDashboardPageData.rows.reduce((sum, row) => sum + row[metric.key], 0),
     }))
   ), [])
 
@@ -109,8 +98,12 @@ export default function SalesDashboardPage() {
       </div>
 
       <div className="sales-overview-grid">
-        <SalesPersonCard rows={salesDashboardRows} />
-        <SalesFollowupCard totals={totals} />
+        <SalesPersonCard
+          {...salesDashboardPageData.contribution}
+          period={salesDashboardPageData.period}
+          rows={salesDashboardPageData.rows}
+        />
+        <SalesFollowupCard {...salesDashboardPageData.followup} totals={totals} />
       </div>
     </section>
   )

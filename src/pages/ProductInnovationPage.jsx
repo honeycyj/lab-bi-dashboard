@@ -1,10 +1,6 @@
 import React, { useMemo } from 'react'
 import {
-  productNewSevereDefects,
-  productSeverityProjects,
-  productSeverityStatuses,
-  productStatusProjects,
-  productStatusStatuses,
+  productInnovationPageData,
 } from '../data/productInnovationData'
 
 const totalOf = (item, statuses) => statuses.reduce((sum, status) => sum + (item[status.key] || 0), 0)
@@ -22,7 +18,7 @@ function ProductChartLegend({ statuses }) {
   )
 }
 
-function ProductStackedColumnChart({ title, data, statuses, maxTicks = 5 }) {
+function ProductStackedColumnChart({ title, department, data, statuses, maxTicks = 5 }) {
   const maxValue = Math.max(...data.map((item) => totalOf(item, statuses)), 1)
   const tickStep = Math.max(1, Math.ceil(maxValue / maxTicks))
   const axisMax = tickStep * maxTicks
@@ -33,7 +29,7 @@ function ProductStackedColumnChart({ title, data, statuses, maxTicks = 5 }) {
     <article className="overview-card product-innovation-card">
       <div className="overview-card-head">
         <span>{title}</span>
-        <small>产品创新部</small>
+        <small>{department}</small>
       </div>
       <div className="product-column-chart">
         <div className="product-chart-y-label">任务数</div>
@@ -79,12 +75,12 @@ function ProductStackedColumnChart({ title, data, statuses, maxTicks = 5 }) {
   )
 }
 
-function ProductNewSevereTable({ rows }) {
+function ProductNewSevereTable({ title, subtitle, rows }) {
   return (
     <article className="overview-card product-innovation-card product-new-severe-card">
       <div className="overview-card-head">
-        <span>上周新增致命/严重缺陷</span>
-        <small>新增明细</small>
+        <span>{title}</span>
+        <small>{subtitle}</small>
       </div>
       <div className="product-new-severe-grid">
         {rows.map((row) => {
@@ -113,18 +109,11 @@ export default function ProductInnovationPage() {
   return (
     <section className="defect-distribution-page product-innovation-page">
       <div className="product-innovation-chart-grid">
-        <ProductStackedColumnChart
-          title="致命/严重缺陷遗留数量（未关闭）"
-          data={productSeverityProjects}
-          statuses={productSeverityStatuses}
-        />
-        <ProductStackedColumnChart
-          title="致命/严重缺陷遗留状态分布"
-          data={productStatusProjects}
-          statuses={productStatusStatuses}
-        />
+        {productInnovationPageData.charts.map((chart) => (
+          <ProductStackedColumnChart {...chart} key={chart.title} />
+        ))}
       </div>
-      <ProductNewSevereTable rows={productNewSevereDefects} />
+      <ProductNewSevereTable {...productInnovationPageData.newSevere} />
     </section>
   )
 }

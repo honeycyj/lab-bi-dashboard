@@ -16,6 +16,7 @@ const weatherLabelFromCode = (code) => {
 export default function Header({ now, title, activeScreen, onSelectScreen, navItems }) {
   const [weather, setWeather] = useState(null)
   const activeNav = navItems.find((item) => item.screen === activeScreen)?.label
+  const brandWidthVw = Math.min(44, Math.max(28, 52 - navItems.length * 3))
   const dateText = new Intl.DateTimeFormat('zh-CN', {
     year: 'numeric',
     month: '2-digit',
@@ -65,12 +66,18 @@ export default function Header({ now, title, activeScreen, onSelectScreen, navIt
   }, [])
 
   return (
-    <header className="topbar">
+    <header
+      className="topbar"
+      style={{
+        '--header-tab-count': navItems.length,
+        '--header-brand-width': `clamp(420px, ${brandWidthVw}vw, 44vw)`,
+      }}
+    >
       <div className="brand">
         <img src="/logotext.png" alt="马栏山音视频实验室" />
         <h1>BI 项目数据看板</h1>
       </div>
-      <nav className="header-tabs" aria-label="看板栏目" style={{ '--header-tab-count': navItems.length }}>
+      <nav className="header-tabs" aria-label="看板栏目">
         {navItems.map((item) => (
           <button
             type="button"

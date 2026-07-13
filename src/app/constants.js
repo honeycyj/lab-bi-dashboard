@@ -3,7 +3,7 @@ export const PAGE_INTERVAL = 12000
 export const SCREEN_INTERVAL = 36000
 export const RISK_CARD_INTERVAL = 3000
 export const TIMER_TICK = 250
-export const SCREEN_COUNT = 7
+export const SCREEN_COUNT = 8
 
 export const NAV_ITEMS = [
   { label: '项目节点图', screen: 0 },
@@ -12,5 +12,6 @@ export const NAV_ITEMS = [
   { label: '缺陷分布', screen: 3 },
   { label: '严重缺陷分布', screen: 4 },
   { label: '产品创新部', screen: 5 },
-  { label: '销售大屏', screen: 6 },
+  { label: '产品创新部02', screen: 6 },
+  { label: '销售大屏', screen: 7 },
 ]

@@ -19,13 +19,15 @@ import ProjectNodesPage from '../pages/ProjectNodesPage'
 import UnclosedDefectsPage from '../pages/UnclosedDefectsPage'
 import DefectDistributionPage, { SevereDefectDistributionPage } from '../pages/DefectDistributionPage'
 import ProductInnovationPage from '../pages/ProductInnovationPage'
+import ProductInnovation02Page from '../pages/ProductInnovation02Page'
 import SalesDashboardPage from '../pages/SalesDashboardPage'
 import { prefersReducedMotion, secondsUntil } from '../utils/time'
 
 gsap.registerPlugin(useGSAP)
 
 const pageQueryMap = {
-  sales: 6,
+  sales: 7,
+  'product-innovation-02': 6,
   'product-innovation': 5,
   'severe-distribution': 4,
   distribution: 3,
@@ -38,14 +40,19 @@ const defaultVisibleScreens = NAV_ITEMS.map((item) => item.screen)
 const parseVisibleScreens = () => {
   if (typeof window === 'undefined') return defaultVisibleScreens
 
-  const stored = window.localStorage.getItem('visibleScreens')
+  const currentStored = window.localStorage.getItem('visibleScreensV2')
+  const legacyStored = window.localStorage.getItem('visibleScreens')
+  const stored = currentStored || legacyStored
   if (!stored) return defaultVisibleScreens
 
   const knownScreens = new Set(defaultVisibleScreens)
-  const parsed = stored
+  const storedScreens = stored
     .split(',')
     .map((item) => Number(item))
-    .filter((item) => knownScreens.has(item))
+  const migratedScreens = currentStored
+    ? storedScreens
+    : storedScreens.flatMap((screen) => (screen === 6 ? [6, 7] : [screen]))
+  const parsed = [...new Set(migratedScreens)].filter((item) => knownScreens.has(item))
 
   return parsed.length ? parsed : defaultVisibleScreens
 }
@@ -108,7 +115,7 @@ export default function Dashboard() {
 
   useEffect(() => {
     if (typeof window === 'undefined') return
-    window.localStorage.setItem('visibleScreens', visibleScreens.join(','))
+    window.localStorage.setItem('visibleScreensV2', visibleScreens.join(','))
   }, [visibleScreens])
 
   useEffect(() => {
@@ -179,7 +186,7 @@ export default function Dashboard() {
 
     const sectionTargets = screenPage === 0
       ? ['.metrics', '.project-board']
-      : [screenPage === 1 ? '.overview-page' : screenPage === 2 ? '.unclosed-defects-page' : screenPage === 6 ? '.sales-dashboard-page' : '.defect-distribution-page']
+      : [screenPage === 1 ? '.overview-page' : screenPage === 2 ? '.unclosed-defects-page' : screenPage === 6 ? '.product-innovation02-page' : screenPage === 7 ? '.sales-dashboard-page' : '.defect-distribution-page']
     const itemTargets = screenPage === 0 ? '.metric-card, .project-row' : '.overview-stat, .overview-card'
     const tl = gsap.timeline({ defaults: { ease: 'power3.out' } })
 
@@ -247,7 +254,7 @@ export default function Dashboard() {
   }, { scope: dashboardRef, dependencies: [currentPage] })
 
   useGSAP(() => {
-    if (![1, 2, 3, 4, 5, 6].includes(screenPage) || prefersReducedMotion()) return
+    if (![1, 2, 3, 4, 5, 6, 7].includes(screenPage) || prefersReducedMotion()) return
 
     const tl = gsap.timeline({ delay: 0.08, defaults: { ease: 'power3.out' } })
     if (screenPage === 1) {
@@ -276,6 +283,12 @@ export default function Dashboard() {
     }
 
     if (screenPage === 6) {
+      tl.fromTo('.innovation02-rate-track i, .innovation02-project-track > div, .innovation02-developer-track > div', { scaleX: 0, transformOrigin: 'left center' }, { scaleX: 1, duration: 0.62, stagger: 0.012, clearProps: 'transform' }, 0.04)
+      tl.fromTo('.innovation02-rate-row strong, .innovation02-project-row strong, .innovation02-developer-row strong', { autoAlpha: 0, y: 4 }, { autoAlpha: 1, y: 0, duration: 0.26, stagger: 0.008, clearProps: 'opacity,visibility,transform' }, 0.24)
+      return
+    }
+
+    if (screenPage === 7) {
       tl.fromTo('.sales-metric-track i', { scaleX: 0, transformOrigin: 'left center' }, { scaleX: 1, duration: 0.64, stagger: 0.035, clearProps: 'transform' }, 0.04)
       tl.fromTo('.sales-matrix-row, .sales-metric-row .dept-row-head b', { autoAlpha: 0, y: 5 }, { autoAlpha: 1, y: 0, duration: 0.28, stagger: 0.018, clearProps: 'opacity,visibility,transform' }, 0.22)
       return
@@ -285,10 +298,10 @@ export default function Dashboard() {
     tl.fromTo('.defect-chart-stack span', { autoAlpha: 0, y: 5 }, { autoAlpha: 1, y: 0, duration: 0.28, stagger: 0.01, clearProps: 'opacity,visibility,transform' }, 0.28)
   }, { scope: dashboardRef, dependencies: [screenPage] })
 
-  const screenTitle = ['项目组合里程碑进度与 TQC 看板', '项目信息概览', '未关闭缺陷', '缺陷分布', '严重缺陷分布', '产品创新部', '销售大屏'][screenPage]
+  const screenTitle = ['项目组合里程碑进度与 TQC 看板', '项目信息概览', '未关闭缺陷', '缺陷分布', '严重缺陷分布', '产品创新部', '产品创新部02', '销售大屏'][screenPage]
 
   return (
-    <main ref={dashboardRef} className={`dashboard theme-${themeMode} ${screenPage === 1 ? 'dashboard-overview' : ''} ${screenPage === 2 ? 'dashboard-defects' : ''} ${screenPage === 3 || screenPage === 4 || screenPage === 5 ? 'dashboard-defect-distribution' : ''} ${screenPage === 6 ? 'dashboard-sales' : ''}`}>
+    <main ref={dashboardRef} className={`dashboard theme-${themeMode} ${screenPage === 1 ? 'dashboard-overview' : ''} ${screenPage === 2 ? 'dashboard-defects' : ''} ${screenPage === 3 || screenPage === 4 || screenPage === 5 || screenPage === 6 ? 'dashboard-defect-distribution' : ''} ${screenPage === 7 ? 'dashboard-sales' : ''}`}>
       <Header
         now={now}
         title={screenTitle}
@@ -316,6 +329,8 @@ export default function Dashboard() {
         <SevereDefectDistributionPage />
       ) : screenPage === 5 ? (
         <ProductInnovationPage />
+      ) : screenPage === 6 ? (
+        <ProductInnovation02Page />
       ) : (
         <SalesDashboardPage />
       )}

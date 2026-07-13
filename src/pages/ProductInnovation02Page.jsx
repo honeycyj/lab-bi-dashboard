@@ -52,6 +52,25 @@ function RateCard({ title, subtitle, data, color }) {
   )
 }
 
+function RateProjectCards({ title, subtitle, data, color }) {
+  return (
+    <article className="overview-card innovation02-card innovation02-rate-project-card">
+      <CardHead title={title} subtitle={subtitle} />
+      <div className="innovation02-rate-project-grid">
+        {data.map((item) => (
+          <div className="innovation02-rate-project-item" key={item.name}>
+            <b title={item.name}>{item.shortName}</b>
+            <strong>{Number(item.value.toFixed(2))}%</strong>
+            <div className="innovation02-rate-track">
+              <i style={{ width: `${item.value}%`, background: color }} />
+            </div>
+          </div>
+        ))}
+      </div>
+    </article>
+  )
+}
+
 function ProjectOverdueCard() {
   const maxValue = Math.max(...innovation02OverdueProjects.map(totalOf), 1)
 
@@ -142,14 +161,25 @@ function OverdueDeveloperCard() {
 
 export default function ProductInnovation02Page() {
   return (
-    <section className="product-innovation02-page">
-      <div className="innovation02-rate-grid">
-        <RateCard title="缺陷解决率" subtitle="缺陷口径 · 排除最近三周新增" data={innovation02SolutionRates} color="#7c2cf4" />
+    <section className="product-innovation02-page product-innovation02-page-split">
+      <div className="innovation02-rate-grid innovation02-rate-grid-single">
+        <RateProjectCards title="缺陷解决率" subtitle="缺陷口径 · 排除最近三周新增" data={innovation02SolutionRates} color="#7c2cf4" />
+      </div>
+      <div className="innovation02-risk-grid innovation02-risk-grid-single">
+        <PendingDeveloperCard />
+      </div>
+    </section>
+  )
+}
+
+export function ProductInnovation03Page() {
+  return (
+    <section className="product-innovation02-page product-innovation03-page">
+      <div className="innovation02-rate-grid innovation02-rate-grid-single">
         <RateCard title="项目缺陷关闭率" subtitle="任务口径 · 默认分组" data={innovation02ClosureRates} color="#42be65" />
       </div>
-      <div className="innovation02-risk-grid">
+      <div className="innovation02-risk-grid innovation03-risk-grid">
         <ProjectOverdueCard />
-        <PendingDeveloperCard />
         <OverdueDeveloperCard />
       </div>
     </section>

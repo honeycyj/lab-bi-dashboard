@@ -2062,6 +2062,11 @@ h1 {
   padding-bottom: 2.2vh;
 }
 
+.product-innovation02-page-split {
+  grid-template-columns: .94fr 1.06fr;
+  grid-template-rows: minmax(0, 1fr);
+}
+
 .innovation02-rate-grid,
 .innovation02-risk-grid {
   min-height: 0;
@@ -2073,8 +2078,20 @@ h1 {
   grid-template-columns: 1fr 1fr;
 }
 
+.innovation02-rate-grid-single {
+  grid-template-columns: minmax(0, 1fr);
+}
+
 .innovation02-risk-grid {
   grid-template-columns: .96fr 1.02fr 1.02fr;
+}
+
+.innovation02-risk-grid.innovation02-risk-grid-single {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.innovation02-risk-grid.innovation03-risk-grid {
+  grid-template-columns: .96fr 1.04fr;
 }
 
 .innovation02-card {
@@ -2107,6 +2124,54 @@ h1 {
   align-content: stretch;
   gap: .52vh;
   padding: 1.15vh 1.25vw .35vh;
+}
+
+.innovation02-rate-project-grid {
+  min-height: 0;
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-auto-rows: clamp(140px, 18vh, 160px);
+  align-content: start;
+  gap: 10px;
+  padding: 1.15vh 1vw 1.25vh;
+  overflow-y: auto;
+  scrollbar-width: none;
+}
+
+.innovation02-rate-project-grid::-webkit-scrollbar {
+  display: none;
+}
+
+.innovation02-rate-project-item {
+  min-width: 0;
+  min-height: 0;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  gap: .7vh;
+  padding: 1.25vh 1vw 1.1vh;
+  border: 1px solid #e4e6eb;
+  background: #f7f8fa;
+}
+
+.innovation02-rate-project-item b {
+  min-width: 0;
+  overflow: hidden;
+  color: #4f535b;
+  font-size: clamp(14px, .78vw, 17px);
+  font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.innovation02-rate-project-item strong {
+  align-self: center;
+  color: #202124;
+  font-family: var(--number-font);
+  font-size: clamp(28px, 2.1vw, 44px);
+  font-weight: 400;
+  letter-spacing: -.03em;
+  line-height: 1;
 }
 
 .innovation02-rate-row {
@@ -2326,6 +2391,16 @@ h1 {
 
 .theme-dark .innovation02-card {
   background: #171728;
+}
+
+.theme-dark .innovation02-rate-project-item {
+  border-color: rgba(255, 255, 255, .08);
+  background: rgba(255, 255, 255, .035);
+}
+
+.theme-dark .innovation02-rate-project-item b,
+.theme-dark .innovation02-rate-project-item strong {
+  color: #f2f4f8;
 }
 
 .theme-dark .innovation02-rate-row b,
@@ -3465,6 +3540,10 @@ h1 {
   background: #dfe4ec;
 }
 
+.theme-dark .stage-timeline-track-base {
+  background: rgba(223, 228, 236, .36);
+}
+
 .stage-timeline-track-fill {
   background: #2aa7f4;
 }
@@ -4135,7 +4214,7 @@ h1 {
 
 /* Segmented BI header */
 .topbar {
-  grid-template-columns: var(--header-brand-width, clamp(420px, 28vw, 44vw)) minmax(0, 1fr) minmax(250px, 13.5vw);
+  grid-template-columns: var(--header-brand-width, clamp(390px, 28vw, 44vw)) minmax(0, 1fr) minmax(250px, 13.5vw);
   align-items: stretch;
   border-bottom: 1px solid rgba(17, 20, 28, .08);
   background: #0e0e1e;

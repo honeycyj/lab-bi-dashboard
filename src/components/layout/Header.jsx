@@ -16,7 +16,7 @@ const weatherLabelFromCode = (code) => {
 export default function Header({ now, title, activeScreen, onSelectScreen, navItems }) {
   const [weather, setWeather] = useState(null)
   const activeNav = navItems.find((item) => item.screen === activeScreen)?.label
-  const brandWidthVw = Math.min(44, Math.max(28, 52 - navItems.length * 3))
+  const brandWidthVw = Math.min(44, Math.max(25, 52 - navItems.length * 3))
   const dateText = new Intl.DateTimeFormat('zh-CN', {
     year: 'numeric',
     month: '2-digit',
@@ -70,7 +70,7 @@ export default function Header({ now, title, activeScreen, onSelectScreen, navIt
       className="topbar"
       style={{
         '--header-tab-count': navItems.length,
-        '--header-brand-width': `clamp(420px, ${brandWidthVw}vw, 44vw)`,
+        '--header-brand-width': `clamp(390px, ${brandWidthVw}vw, 44vw)`,
       }}
     >
       <div className="brand">

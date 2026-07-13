@@ -2074,7 +2074,7 @@ h1 {
 }
 
 .innovation02-risk-grid {
-  grid-template-columns: .9fr 1.05fr 1.05fr;
+  grid-template-columns: .96fr 1.02fr 1.02fr;
 }
 
 .innovation02-card {
@@ -2172,7 +2172,7 @@ h1 {
 .innovation02-project-row {
   min-height: 0;
   display: grid;
-  grid-template-columns: minmax(88px, 6.2vw) minmax(0, 1fr) 24px;
+  grid-template-columns: minmax(96px, 6.5vw) minmax(0, 1fr) 28px;
   align-items: center;
   gap: .62vw;
 }
@@ -2185,7 +2185,7 @@ h1 {
 }
 
 .innovation02-project-track {
-  height: clamp(18px, 2.05vh, 26px);
+  height: clamp(21px, 2.5vh, 30px);
 }
 
 .innovation02-project-track > div {
@@ -2195,14 +2195,26 @@ h1 {
 }
 
 .innovation02-project-track i {
-  min-width: 2px;
+  min-width: 16px;
   height: 100%;
   display: grid;
   place-items: center;
   color: rgba(14, 14, 30, .72);
   font-family: var(--number-font);
-  font-size: clamp(8px, .48vw, 11px);
+  font-size: clamp(10px, .62vw, 13px);
   font-style: normal;
+  font-weight: 600;
+}
+
+.innovation02-project-row b {
+  color: #30343b;
+  font-size: clamp(11px, .66vw, 14px);
+  font-weight: 500;
+}
+
+.innovation02-project-row strong {
+  font-size: clamp(12px, .74vw, 16px);
+  font-weight: 600;
 }
 
 .innovation02-legend,
@@ -2317,9 +2329,12 @@ h1 {
 }
 
 .theme-dark .innovation02-rate-row b,
-.theme-dark .innovation02-project-row b,
 .theme-dark .innovation02-developer-row b {
   color: #d8dce6;
+}
+
+.theme-dark .innovation02-project-row b {
+  color: #f1f3f8;
 }
 
 .theme-dark .innovation02-rate-row strong,
@@ -5255,4 +5270,11 @@ h1 {
 
 .theme-dark .defect-chart-stack i {
   color: rgba(14, 14, 30, .64);
+}
+
+/* Keep values inside colored chart segments readable on dark dashboards. */
+.theme-dark .defect-chart-stack i,
+.theme-dark .product-chart-stack i,
+.theme-dark .innovation02-project-track i {
+  color: #fff;
 }
